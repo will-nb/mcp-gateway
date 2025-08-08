@@ -40,4 +40,4 @@ COPY . .
 EXPOSE 8081
 
 # 启动命令（可根据实际项目替换）
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8081"]
