@@ -40,6 +40,22 @@ class ChatResponse(BaseModel):
         "- 请求参数: model, messages, stream, extra_body（透传到下游）\n"
         "- 返回值: {code, message, data}，data.raw 为下游原始响应；并包含 cache 命中信息\n"
     ),
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "example": {
+                        "model": "qwen-plus",
+                        "messages": [
+                            {"role": "system", "content": "You are a helpful assistant."},
+                            {"role": "user", "content": "用一句话介绍你自己"}
+                        ],
+                        "stream": False
+                    }
+                }
+            }
+        }
+    },
 )
 def chat(req: ChatRequest) -> SuccessResponse[ChatResponse]:
     s = get_settings()
