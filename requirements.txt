@@ -20,6 +20,7 @@ qdrant-client==1.15.1
 # ✅ OCR
 pytesseract==0.3.10
 pillow==11.2.1
+pyzbar==0.1.9
 
 # ✅ 单元测试
 pytest==8.2.2

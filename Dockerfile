@@ -12,6 +12,7 @@ RUN apt-get update && \
     zlib1g-dev \
     libpoppler-cpp-dev \
     libtesseract-dev \
+        libzbar0 \
     tesseract-ocr \
     tesseract-ocr-chi-sim \
     tesseract-ocr-chi-tra \
