@@ -23,20 +23,14 @@ router = APIRouter()
 )
 async def openai_chat_completions(
     body: Dict[str, Any] = Body(
-        ..., 
-        examples={
-            "basic": {
-                "summary": "最小示例",
-                "description": "与 OpenAI 兼容的最小聊天补全请求",
-                "value": {
-                    "model": "gpt-3.5-turbo",
-                    "messages": [
-                        {"role": "system", "content": "You are a helpful assistant."},
-                        {"role": "user", "content": "用一句话介绍你自己"}
-                    ],
-                    "stream": False
-                },
-            }
+        ...,
+        example={
+            "model": "gpt-3.5-turbo",
+            "messages": [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": "用一句话介绍你自己"}
+            ],
+            "stream": False
         },
     ),
 ):

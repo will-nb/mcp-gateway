@@ -25,18 +25,12 @@ router = APIRouter()
 async def anthropic_messages(
     body: Dict[str, Any] = Body(
         ...,
-        examples={
-            "basic": {
-                "summary": "最小示例",
-                "description": "与 Claude 兼容的最小 Messages 请求",
-                "value": {
-                    "model": "claude-3-5-sonnet-20240620",
-                    "max_tokens": 256,
-                    "messages": [
-                        {"role": "user", "content": [ {"type": "text", "text": "用一句话介绍你自己"} ]}
-                    ]
-                }
-            }
+        example={
+            "model": "claude-3-5-sonnet-20240620",
+            "max_tokens": 256,
+            "messages": [
+                {"role": "user", "content": [ {"type": "text", "text": "用一句话介绍你自己"} ]}
+            ]
         }
     ),
 ):
