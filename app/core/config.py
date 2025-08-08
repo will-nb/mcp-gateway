@@ -30,6 +30,13 @@ class AppSettings:
     dashscope_api_key: str | None
     dashscope_base_url: str
     qwen_allowed_models: List[str]
+    # OpenAI / Gemini / Claude (兼容代理所需)
+    openai_api_key: str | None
+    openai_base_url: str
+    gemini_api_key: str | None
+    gemini_base_url: str
+    anthropic_api_key: str | None
+    anthropic_base_url: str
     # Semantic cache
     qdrant_cache_collection: str
     qdrant_cache_vector_dim: int
@@ -70,6 +77,18 @@ def get_settings() -> AppSettings:
         "DASHSCOPE_BASE_URL",
         "https://dashscope.aliyuncs.com/compatible-mode/v1",
     )
+    # OpenAI
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    openai_base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+    # Gemini
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    gemini_base_url = os.getenv(
+        "GEMINI_BASE_URL",
+        "https://generativelanguage.googleapis.com",
+    )
+    # Claude (Anthropic)
+    anthropic_api_key = os.getenv("CLAUDE_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+    anthropic_base_url = os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
     qwen_allowed_models_env = os.getenv(
         "QWEN_ALLOWED_MODELS",
         "qwen-plus,qwen3-coder-plus,qwen3-coder-flash,qwen-flash",
@@ -111,4 +130,10 @@ def get_settings() -> AppSettings:
         qdrant_cache_collection=qdrant_cache_collection,
         qdrant_cache_vector_dim=qdrant_cache_vector_dim,
         qdrant_cache_score_threshold=qdrant_cache_score_threshold,
+        openai_api_key=openai_api_key,
+        openai_base_url=openai_base_url,
+        gemini_api_key=gemini_api_key,
+        gemini_base_url=gemini_base_url,
+        anthropic_api_key=anthropic_api_key,
+        anthropic_base_url=anthropic_base_url,
     )

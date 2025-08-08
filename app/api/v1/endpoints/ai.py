@@ -30,7 +30,17 @@ class ChatResponse(BaseModel):
     cache_score: float | None = None
 
 
-@router.post("/ai/chat", response_model=SuccessResponse[ChatResponse], summary="Qwen chat completion")
+@router.post(
+    "/ai/chat",
+    response_model=SuccessResponse[ChatResponse],
+    summary="Qwen 聊天补全（OpenAI 兼容后端）",
+    description=(
+        "中文说明:\n"
+        "- 使用与 OpenAI Chat Completions 兼容的 DashScope/Qwen 后端\n"
+        "- 请求参数: model, messages, stream, extra_body（透传到下游）\n"
+        "- 返回值: {code, message, data}，data.raw 为下游原始响应；并包含 cache 命中信息\n"
+    ),
+)
 def chat(req: ChatRequest) -> SuccessResponse[ChatResponse]:
     s = get_settings()
     if req.model not in s.qwen_allowed_models:
