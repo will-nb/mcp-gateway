@@ -5,9 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.api.v1.api import api_router
-from app.api.compat import openai as compat_openai
-from app.api.compat import gemini as compat_gemini
-from app.api.compat import anthropic as compat_anthropic
 from app.core.exceptions import http_422_handler, http_error_handler, http_500_handler
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -66,6 +63,3 @@ def read_root() -> SuccessResponse[EmptyPayload]:
 
 # Mount API routers
 app.include_router(api_router, prefix=settings.api_v1_prefix)
-app.include_router(compat_openai.router, tags=["compat"])  # 保持原生 /v1 路径
-app.include_router(compat_gemini.router, tags=["compat"])  # 保持原生 /v1beta 路径
-app.include_router(compat_anthropic.router, tags=["compat"])  # 保持原生 /v1 路径
