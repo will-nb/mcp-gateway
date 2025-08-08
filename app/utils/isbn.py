@@ -42,12 +42,31 @@ def is_valid_isbn13(isbn: str) -> bool:
     return check == int(s[12])
 
 
+_OCR_CONFUSION_MAP = str.maketrans({
+    'O': '0', 'o': '0',
+    'I': '1', 'i': '1', 'l': '1', 'L': '1',
+    'S': '5', 's': '5',
+    'B': '8',
+    'Z': '2', 'z': '2',
+})
+
+
+def _correction_variants(s: str) -> List[str]:
+    variants = []
+    # raw cleaned
+    variants.append(s)
+    # apply OCR confusion map
+    variants.append(s.translate(_OCR_CONFUSION_MAP))
+    return list(dict.fromkeys(variants))
+
+
 def normalize_isbn(raw: str) -> Optional[Tuple[str, str]]:
-    s = _clean_isbn(raw)
-    if is_valid_isbn13(s):
-        return ("ISBN-13", s)
-    if is_valid_isbn10(s):
-        return ("ISBN-10", s)
+    s0 = _clean_isbn(raw)
+    for s in _correction_variants(s0):
+        if is_valid_isbn13(s):
+            return ("ISBN-13", s)
+        if is_valid_isbn10(s):
+            return ("ISBN-10", s)
     return None
 
 

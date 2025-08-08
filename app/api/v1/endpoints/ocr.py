@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from app.schemas.response import SuccessResponse
 from app.services.ocr import get_ocr_service
 from app.utils.isbn import extract_isbn_candidates
+from app.services.barcode import decode_isbn_from_image_bytes
 
 
 router = APIRouter()
@@ -32,6 +33,10 @@ async def ocr_isbn(file: UploadFile = File(..., description="图片文件，如 
         raise HTTPException(status_code=400, detail="仅支持 PNG/JPEG 图片")
 
     content = await file.read()
+    # 1) Try barcode first (fast/robust for many covers)
+    barcode_hits = decode_isbn_from_image_bytes(content)
+
+    # 2) OCR fallback
     ocr = get_ocr_service()
     variants = ocr.image_bytes_to_texts(content)
 
@@ -49,8 +54,8 @@ async def ocr_isbn(file: UploadFile = File(..., description="图片文件，如 
         if len(samples) >= 5:
             break
 
-    # Extract ISBNs across all variants
-    found = []
+    # Extract ISBNs across all variants + barcode hits
+    found = list(barcode_hits)
     unique = set()
     for _, txt in variants:
         for t, n in extract_isbn_candidates(txt):
@@ -58,4 +63,6 @@ async def ocr_isbn(file: UploadFile = File(..., description="图片文件，如 
                 unique.add(n)
                 found.append(n)
 
+    if not found:
+        raise HTTPException(status_code=422, detail="未能从图片中识别出有效的 ISBN。请尝试更清晰的条形码或封面照片。")
     return SuccessResponse(data=OCRISBNResponse(text_samples=samples, isbns=found))
