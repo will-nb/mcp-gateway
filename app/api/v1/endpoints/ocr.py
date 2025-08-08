@@ -36,9 +36,10 @@ async def ocr_isbn(file: UploadFile = File(..., description="图片文件，如 
     # 1) Try barcode first (fast/robust for many covers)
     barcode_hits = decode_isbn_from_image_bytes(content)
 
-    # 2) OCR fallback
+    # 2) OCR fallback（行粒度 + 字串）
     ocr = get_ocr_service()
     variants = ocr.image_bytes_to_texts(content)
+    lines = ocr.image_bytes_to_lines(content)
 
     # Deduplicate and keep short samples
     seen = set()
@@ -54,11 +55,16 @@ async def ocr_isbn(file: UploadFile = File(..., description="图片文件，如 
         if len(samples) >= 5:
             break
 
-    # Extract ISBNs across all variants + barcode hits
+    # Extract ISBNs across all variants + lines + barcode hits
     found = list(barcode_hits)
     unique = set()
     for _, txt in variants:
         for t, n in extract_isbn_candidates(txt):
+            if n not in unique:
+                unique.add(n)
+                found.append(n)
+    for ln in lines:
+        for t, n in extract_isbn_candidates(ln):
             if n not in unique:
                 unique.add(n)
                 found.append(n)

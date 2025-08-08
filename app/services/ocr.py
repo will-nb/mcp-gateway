@@ -26,6 +26,13 @@ class OCRService:
         variants.append(base.point(lambda p: 255 if p > 180 else 0).convert("L"))
         # Slight blur then sharpen to remove noise
         variants.append(base.filter(ImageFilter.MedianFilter(size=3)))
+        # Upscale to help small text
+        try:
+            w, h = base.size
+            variants.append(base.resize((int(w * 1.5), int(h * 1.5))))
+            variants.append(base.resize((w * 2, h * 2)))
+        except Exception:
+            pass
         # Try rotations (deskew approximate)
         for angle in (-10, -5, 5, 10):
             variants.append(base.rotate(angle, expand=True, fillcolor=255))
@@ -50,6 +57,80 @@ class OCRService:
             if txt2 and txt2 != txt:
                 texts.append(("psm6", txt2))
         return texts
+
+    def image_bytes_to_lines(self, content: bytes) -> List[str]:
+        """
+        Use tesseract TSV output to assemble line-wise texts across preprocessing variants.
+        Group by line number to maintain local context (help locating 'ISBN' followed by digits).
+        """
+        try:
+            import importlib
+            pytesseract = importlib.import_module("pytesseract")  # type: ignore
+        except Exception as exc:  # pragma: no cover
+            raise RuntimeError("pytesseract is not installed. Please install runtime deps.") from exc
+
+        image = Image.open(io.BytesIO(content))
+        lines: List[str] = []
+        for variant in self._preprocess_variants(image):
+            try:
+                tsv = pytesseract.image_to_data(
+                    variant,
+                    lang=self.languages,
+                    config="--oem 3 --psm 6",
+                    output_type=getattr(pytesseract, 'Output').STRING,  # type: ignore
+                )
+            except Exception:
+                # Fallback to plain string if tsv not supported
+                txt = pytesseract.image_to_string(variant, lang=self.languages)
+                if txt:
+                    lines.extend([l.strip() for l in txt.splitlines() if l.strip()])
+                continue
+
+            # Parse TSV manually (header present)
+            try:
+                rows = [r for r in tsv.splitlines() if r.strip()]
+                if not rows:
+                    continue
+                header = rows[0].split('\t')
+                idx_word = header.index('text') if 'text' in header else -1
+                idx_conf = header.index('conf') if 'conf' in header else -1
+                idx_line = header.index('line_num') if 'line_num' in header else -1
+                if idx_word == -1 or idx_line == -1:
+                    continue
+                from collections import defaultdict
+                groups = defaultdict(list)
+                for row in rows[1:]:
+                    cols = row.split('\t')
+                    if len(cols) <= max(idx_word, idx_line, idx_conf if idx_conf != -1 else 0):
+                        continue
+                    word = cols[idx_word].strip()
+                    if not word:
+                        continue
+                    conf_ok = True
+                    if idx_conf != -1:
+                        try:
+                            conf_ok = float(cols[idx_conf]) >= 0  # accept all OCR words; adjust if needed
+                        except Exception:
+                            conf_ok = True
+                    if not conf_ok:
+                        continue
+                    line_no = cols[idx_line]
+                    groups[line_no].append(word)
+                for ln in sorted(groups.keys(), key=lambda x: int(x) if x.isdigit() else 0):
+                    line_text = ' '.join(groups[ln]).strip()
+                    if line_text:
+                        lines.append(line_text)
+            except Exception:
+                # ignore parsing errors for this variant
+                continue
+        # Deduplicate lines preserving order
+        seen = set()
+        uniq: List[str] = []
+        for l in lines:
+            if l not in seen:
+                seen.add(l)
+                uniq.append(l)
+        return uniq
 
 
 def get_ocr_service() -> OCRService:
