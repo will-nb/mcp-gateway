@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Any
 
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings
@@ -22,7 +22,24 @@ router = APIRouter()
         "- 返回值为下游响应 JSON\n"
     ),
 )
-async def anthropic_messages(request: Request):
+async def anthropic_messages(
+    body: Dict[str, Any] = Body(
+        ...,
+        examples={
+            "basic": {
+                "summary": "最小示例",
+                "description": "与 Claude 兼容的最小 Messages 请求",
+                "value": {
+                    "model": "claude-3-5-sonnet-20240620",
+                    "max_tokens": 256,
+                    "messages": [
+                        {"role": "user", "content": [ {"type": "text", "text": "用一句话介绍你自己"} ]}
+                    ]
+                }
+            }
+        }
+    ),
+):
     """
     Claude 兼容接口: `POST /v1/messages`
 
@@ -34,8 +51,6 @@ async def anthropic_messages(request: Request):
     api_key = s.anthropic_api_key
     if not api_key:
         raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY/CLAUDE_API_KEY not configured")
-
-    body: Dict[str, Any] = await request.json()
 
     headers = {
         "x-api-key": api_key,
