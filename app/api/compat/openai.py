@@ -6,6 +6,7 @@ from fastapi import APIRouter, Body
 from fastapi.responses import JSONResponse
 
 from app.services.qwen_client import get_qwen_client
+import httpx
 
 
 router = APIRouter()
@@ -25,7 +26,7 @@ async def openai_chat_completions(
     body: Dict[str, Any] = Body(
         ...,
         example={
-            "model": "gpt-3.5-turbo",
+            "model": "qwen-plus",
             "messages": [
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": "用一句话介绍你自己"}
@@ -41,7 +42,7 @@ async def openai_chat_completions(
     - 若 `stream=true`，以 `text/event-stream` 直通下游的 SSE 流事件
     - 若 `stream=false`，返回 OpenAI 兼容的 JSON 结构
     """
-    model: str = body.get("model")
+    model: str = body.get("model") or "qwen-plus"
     messages = body.get("messages", [])
     stream: bool = bool(body.get("stream", False))
 
@@ -50,6 +51,13 @@ async def openai_chat_completions(
 
     client = get_qwen_client()
 
-    # 当前示例未实现 SSE，统一按非流式返回
-    result = client.chat_completion(model=model, messages=messages, stream=False, extra_body=extra)
-    return JSONResponse(result)
+    try:
+        # 当前示例未实现 SSE，统一按非流式返回
+        result = client.chat_completion(model=model, messages=messages, stream=False, extra_body=extra)
+        return JSONResponse(result)
+    except httpx.HTTPStatusError as e:
+        try:
+            content = e.response.json()
+        except Exception:
+            content = {"error": {"code": "upstream_error", "message": e.response.text}}
+        return JSONResponse(content=content, status_code=e.response.status_code)

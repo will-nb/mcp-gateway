@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Any
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, HTTPException, Path
 from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings
@@ -22,7 +22,7 @@ router = APIRouter()
     ),
 )
 async def gemini_generate_content_v1(
-    model: str,
+    model: str = Path(..., example="qwen-plus"),
     body: Dict[str, Any] = Body(
         ...,
         example={

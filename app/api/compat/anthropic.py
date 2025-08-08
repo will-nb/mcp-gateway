@@ -26,7 +26,7 @@ async def anthropic_messages(
     body: Dict[str, Any] = Body(
         ...,
         example={
-            "model": "claude-3-5-sonnet-20240620",
+            "model": "qwen-plus",
             "max_tokens": 256,
             "messages": [
                 {"role": "user", "content": [ {"type": "text", "text": "用一句话介绍你自己"} ]}
