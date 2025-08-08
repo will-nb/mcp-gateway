@@ -1,0 +1,49 @@
+app = "mcp-gateway"
+primary_region = "sin"
+
+[env]
+  ENV = "staging"
+  DEBUG = "false"
+  API_PREFIX = "/v1"
+  API_TITLE = "MCP Gateway"
+  API_VERSION = "1.0.0"
+  API_BASE_URL = "https://mcp-gateway.fly.dev"
+
+  # AI 相关配置（可拓展）
+  DEFAULT_MODEL = "gpt-3.5-turbo"
+  DEFAULT_BACKEND = "openai"
+
+  # 缓存配置
+  QDRANT_HOST = "localhost"
+  QDRANT_PORT = "6333"
+
+  # OCR 配置
+  OCR_LANGUAGE = "eng+chi_sim"
+
+  # 日志
+  LOG_LEVEL = "INFO"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[experimental]
+  auto_rollback = true
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [[services.http_checks]]
+    grace_period = "30s"
+    interval = "15s"
+    timeout = "5s"
+    method = "GET"
+    path = "/"
