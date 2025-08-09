@@ -46,3 +46,16 @@ def fetch_by_isbn(source: str, isbn: str, *, api_key: Optional[str] = None, lang
     if source == SOURCE_HKPL:
         return hkpl.fetch_by_isbn(isbn, timeout=timeout)
     raise ValueError(f"Unsupported source: {source}")
+
+
+def search_by_title(source: str, title: str, *, api_key: Optional[str] = None, lang: Optional[str] = None, max_results: int = 5, timeout: float = 10.0) -> list[NormalizedBook]:
+    if source == SOURCE_GOOGLE_BOOKS:
+        return google_books.search_by_title(title, api_key=api_key, lang=lang, max_results=max_results, timeout=timeout)
+    if source == SOURCE_OPEN_LIBRARY:
+        return open_library.search_by_title(title, max_results=max_results, timeout=timeout)
+    if source == SOURCE_LOC:
+        return loc.search_by_title(title, max_results=max_results, timeout=timeout)
+    # WorldCat/NDL/BL/KOLISNET 官方搜索接口存在但需更复杂鉴权或 XML 解析，这里先不实现，返回空并由上层选择其他来源
+    if source in (SOURCE_WORLDCAT, SOURCE_NDL, SOURCE_BRITISH_LIBRARY, SOURCE_KOLISNET, SOURCE_NLC_CHINA, SOURCE_HKPL, SOURCE_ISBNDB):
+        raise NotImplementedError(f"title search not implemented for {source}")
+    raise ValueError(f"Unsupported source: {source}")

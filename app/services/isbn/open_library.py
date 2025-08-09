@@ -31,6 +31,7 @@ def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> NormalizedBook:
         "identifiers": {},
         "cover": payload.get("cover") or {},
         "preview_urls": [],
+        "access_urls": [],
         "raw": data,
     }
     # identifiers if present in "identifiers" field
@@ -43,6 +44,18 @@ def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> NormalizedBook:
     # Preview
     if payload.get("url"):
         book["preview_urls"].append(payload.get("url"))
+    # ebooks/download links via Internet Archive when available
+    ebooks = payload.get("ebooks") or []
+    candidates: list[str] = []
+    for e in ebooks:
+        if e.get("availability") == "full" and e.get("formats"):
+            for f in e.get("formats"):
+                href = f.get("url") or f.get("read_url")
+                if href:
+                    candidates.append(href)
+    if candidates:
+        from app.services.isbn.client_base import filter_alive_urls
+        book["access_urls"] = filter_alive_urls(candidates, timeout=5.0)
     client.close()
     return book
 

@@ -18,6 +18,7 @@ class NormalizedBook(TypedDict, total=False):
     identifiers: Dict[str, Optional[str]]
     cover: Dict[str, Optional[str]]
     preview_urls: List[str]
+    access_urls: List[str]
     raw: Dict[str, Any]
 
 

@@ -37,3 +37,20 @@ class HttpError(Exception):
     def __init__(self, status_code: int, message: str | None = None):
         super().__init__(message or f"HTTP error: {status_code}")
         self.status_code = status_code
+
+
+def filter_alive_urls(urls: list[str], timeout: float = 5.0) -> list[str]:
+    if not urls:
+        return []
+    alive: list[str] = []
+    with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+        for u in urls:
+            try:
+                resp = client.head(u)
+                if resp.status_code >= 400:
+                    resp = client.get(u)
+                if 200 <= resp.status_code < 300:
+                    alive.append(u)
+            except Exception:
+                continue
+    return alive

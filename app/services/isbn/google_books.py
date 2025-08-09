@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from app.services.isbn.client_base import HttpClient, RateLimitError, HttpError
+from app.services.isbn.client_base import HttpClient, RateLimitError, HttpError, filter_alive_urls
 from app.services.isbn.types import NormalizedBook
 
 
@@ -36,6 +36,7 @@ def fetch_by_isbn(isbn: str, *, api_key: Optional[str] = None, lang: Optional[st
         "identifiers": {},
         "cover": {},
         "preview_urls": [],
+        "access_urls": [],
         "raw": data,
     }
     try:
@@ -70,6 +71,19 @@ def fetch_by_isbn(isbn: str, *, api_key: Optional[str] = None, lang: Optional[st
             book["preview_urls"].append(vi.get("previewLink"))
         if vi.get("infoLink"):
             book["preview_urls"].append(vi.get("infoLink"))
+        # accessInfo for potential epub/pdf availability
+        ai = items[0].get("accessInfo", {})
+        urls: list[str] = []
+        if ai.get("webReaderLink"):
+            urls.append(ai.get("webReaderLink"))
+        epub = ai.get("epub") or {}
+        if epub.get("acsTokenLink"):
+            urls.append(epub.get("acsTokenLink"))
+        pdf = ai.get("pdf") or {}
+        if pdf.get("acsTokenLink"):
+            urls.append(pdf.get("acsTokenLink"))
+        if urls:
+            book["access_urls"] = filter_alive_urls(urls, timeout=5.0)
     finally:
         client.close()
     return book
@@ -109,6 +123,7 @@ def search_by_title(title: str, *, api_key: Optional[str] = None, lang: Optional
             "identifiers": {},
             "cover": vi.get("imageLinks") or {},
             "preview_urls": [u for u in [vi.get("previewLink"), vi.get("infoLink")] if u],
+            "access_urls": [],
             "raw": it,
         }
         results.append(nb)

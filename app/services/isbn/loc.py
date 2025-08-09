@@ -30,6 +30,7 @@ def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> NormalizedBook:
         "identifiers": {"loc_item": payload.get("id")},
         "cover": {},
         "preview_urls": [payload.get("id")] if payload.get("id") else [],
+        "access_urls": [],
         "raw": data,
     }
     client.close()
