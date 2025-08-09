@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from app.services.isbn.client_base import HttpClient
+from app.services.isbn.client_base import HttpClient, HttpError
 from app.services.isbn.types import NormalizedBook
 
 
@@ -10,6 +10,9 @@ def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> NormalizedBook:
     client = HttpClient(base_url="https://openlibrary.org", timeout=timeout)
     # Try data API first
     r = client.get("/api/books", params={"bibkeys": f"ISBN:{isbn}", "format": "json", "jscmd": "data"})
+    if r.status_code >= 400:
+        client.close()
+        raise HttpError(r.status_code, r.text)
     data = r.json()
     book_key = f"ISBN:{isbn}"
     payload = data.get(book_key) or {}

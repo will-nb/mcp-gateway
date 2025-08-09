@@ -18,6 +18,7 @@ from app.services.isbn import (
     SOURCE_OPEN_LIBRARY,
     SOURCE_ISBNDB,
 )
+from app.services.isbn.client_base import RateLimitError
 
 # 国别优先级映射（示例，可扩展）
 COUNTRY_PRIORITY: Dict[str, List[str]] = {
@@ -56,7 +57,7 @@ def _cache_book(doc: NormalizedBook) -> None:
     db["books"].update_one({"_id": isbn}, {"$set": {"lastFetched": doc}}, upsert=True)
 
 
-def resolve_isbn(isbn: str, *, country_code: Optional[str] = None, prefer_order: Optional[List[str]] = None, api_keys: Optional[Dict[str, str]] = None, timeout: float = 10.0) -> Optional[NormalizedBook]:
+def resolve_isbn(isbn: str, *, country_code: Optional[str] = None, prefer_order: Optional[List[str]] = None, api_keys: Optional[Dict[str, str]] = None, timeout: float = 10.0, force_source: Optional[str] = None) -> Optional[NormalizedBook]:
     # 1) 本地 Mongo 查询（简单示例）
     db = get_database()
     cached = db["books"].find_one({"_id": isbn})
@@ -77,6 +78,12 @@ def resolve_isbn(isbn: str, *, country_code: Optional[str] = None, prefer_order:
             if src in order:
                 order.remove(src)
             order.insert(0, src)
+
+    # 如果强制指定来源，优先且仅尝试该来源。如果该来源在屏蔽期内，直接返回限流错误。
+    if force_source:
+        if _is_rate_limited(force_source):
+            raise RateLimitError(f"{force_source} currently rate-limited")
+        order = [force_source]
 
     # 3) 逐一尝试调用，遇到 429 或明确限流错误则标记 24h 不再调用
     for src in order:
@@ -101,6 +108,12 @@ def resolve_isbn(isbn: str, *, country_code: Optional[str] = None, prefer_order:
             if doc and (doc.get("title") or doc.get("creators")):
                 _cache_book(doc)
                 return doc
+        except RateLimitError:
+            _set_rate_limited(src)
+            if force_source:
+                # 用户强制的来源被限流，则直接抛出
+                raise
+            continue
         except Exception as e:
             msg = str(e).lower()
             if "429" in msg or "rate limit" in msg or "too many requests" in msg:

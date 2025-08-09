@@ -2,13 +2,19 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from app.services.isbn.client_base import HttpClient
+from app.services.isbn.client_base import HttpClient, RateLimitError, HttpError
 from app.services.isbn.types import NormalizedBook
 
 
 def fetch_by_isbn(isbn: str, *, api_key: str, timeout: float = 10.0) -> NormalizedBook:
     client = HttpClient(base_url="https://api2.isbndb.com", timeout=timeout)
     r = client.get(f"/book/{isbn}", headers={"X-API-KEY": api_key})
+    if r.status_code == 429 or r.status_code == 403:
+        client.close()
+        raise RateLimitError("isbndb rate limited")
+    if r.status_code >= 400:
+        client.close()
+        raise HttpError(r.status_code, r.text)
     data = r.json()
     payload = data.get("book", {})
     book: NormalizedBook = {

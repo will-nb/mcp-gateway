@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from app.services.isbn.client_base import HttpClient
+from app.services.isbn.client_base import HttpClient, RateLimitError, HttpError
 from app.services.isbn.types import NormalizedBook
 
 
@@ -14,6 +14,12 @@ def fetch_by_isbn(isbn: str, *, api_key: Optional[str] = None, lang: Optional[st
     if lang:
         params["langRestrict"] = lang
     r = client.get("/volumes", params=params)
+    if r.status_code == 429 or r.status_code == 403:
+        client.close()
+        raise RateLimitError("google_books rate limited")
+    if r.status_code >= 400:
+        client.close()
+        raise HttpError(r.status_code, r.text)
     data = r.json()
     book: NormalizedBook = {
         "source": "google_books",
