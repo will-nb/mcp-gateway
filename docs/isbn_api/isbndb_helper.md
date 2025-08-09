@@ -59,3 +59,8 @@ def fetch_by_isbn(isbn: str, *, api_key: str, timeout: float = 10.0) -> Dict[str
 
 ### 合规
 - 遵守 ISBNdb 使用条款；避免共享/泄露 API Key；遵守商业使用限制与品牌要求
+
+### Key / 注册信息
+- 注册入口: https://isbndb.com/apidocs
+- 注册/费用: 需要注册并申请 API Key；付费服务，通常提供免费试用额度（如约 500 次/月，具体以官网为准），超出需订阅付费计划。
+- 不注册的区别: 无法访问 API。注册后可按额度调用；超过额度将被限流/拒绝。

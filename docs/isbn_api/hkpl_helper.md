@@ -30,3 +30,8 @@ def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> Dict[str, Any]:
 
 ### 合规
 - 避免网页抓取；如需商用/批量访问，联系馆方或使用开放数据集并遵守许可
+
+### Key / 注册信息
+- 注册入口: https://www.hkpl.gov.hk/tc/services/library/library-catalogue
+- 注册/费用: 面向公众的正式 JSON API 未公开；如需系统集成，通常需与馆方联系确认开放数据或合作接口；费用与权限以馆方为准。
+- 不注册的区别: 无法调用正式 API；只能使用公开检索页面（不建议爬取）。

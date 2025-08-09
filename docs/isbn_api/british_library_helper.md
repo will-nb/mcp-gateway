@@ -47,3 +47,8 @@ GET https://sru.bl.uk/SRU?operation=searchRetrieve&version=1.2&query=isbn=%22{IS
 
 ### 合规
 - 遵守 BL API/SRU 使用条款；必要时做归因
+
+### Key / 注册信息
+- 注册入口: https://www.bl.uk/catalogues-and-collections/apis
+- 注册/费用: SRU 接口通常开放免费；如需特定现代 API 可能需要注册 Key。详情与配额以英国图书馆官方为准。
+- 不注册的区别: SRU 可直接访问；需要 Key 的接口若未注册则无法调用。

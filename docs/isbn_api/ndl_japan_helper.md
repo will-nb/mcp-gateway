@@ -49,3 +49,8 @@ GET https://ndlsearch.ndl.go.jp/api/sru?operation=searchRetrieve&recordSchema=dc
 
 ### 合规
 - 遵循 NDL API 使用条款与频控；必要时显示来源
+
+### Key / 注册信息
+- 注册入口: https://ndlsearch.ndl.go.jp/en/api
+- 注册/费用: 免费；部分新接口可能需要申请访问权限。请以官网为准。
+- 不注册的区别: 公开 SRU 接口通常无需 Key；若需使用新版/受限端点，需按要求申请。

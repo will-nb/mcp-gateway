@@ -47,3 +47,8 @@ GET https://api.nl.go.kr/.../search?serviceKey={SERVICE_KEY}&isbn={ISBN}&format=
 
 ### 合规
 - 遵守馆方条款与频控；避免过度缓存
+
+### Key / 注册信息
+- 注册入口: https://www.nl.go.kr/EN/contents/N30202000000.do
+- 注册/费用: 需要申请 `serviceKey`，免费使用但需遵循速率/配额；具体以官网为准。
+- 不注册的区别: 无法访问 KOLIS-NET Open API。

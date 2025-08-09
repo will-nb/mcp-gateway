@@ -65,3 +65,8 @@ def fetch_by_isbn(isbn: str, *, prefer_data_api: bool = True, timeout: float = 1
 
 ### 许可与合规
 - 元数据通常为开放许可；封面由 `covers.openlibrary.org` 提供，遵守其使用条款；建议显示来源归因
+
+### Key / 注册信息
+- 注册入口: https://openlibrary.org/developers/api
+- 注册/费用: 不需要注册或 Key，免费使用。请遵守礼貌访问（限速、自限并发）。
+- 不注册的区别: 无注册流程；但过度访问可能被临时限速或封禁 IP。

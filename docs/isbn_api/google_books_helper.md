@@ -80,3 +80,8 @@ GET https://www.googleapis.com/books/v1/volumes?q=isbn:9780134685991&maxResults=
 
 ### 许可与合规要点
 - 遵循 Google APIs TOS；必要时展示来源/归因；避免长时间缓存封面与预览 URL；遵守用户数据政策
+
+### Key / 注册信息
+- 注册入口: https://developers.google.com/books
+- 注册/费用: 需要在 Google Cloud Console 创建项目并启用 Books API，申请 API Key。免费使用但有每日配额与速率限制；超额需等待配额重置或申请更高限额。
+- 不注册的区别: 无 Key 也可调用，但配额更严格、易触发限流与失败；建议配置 Key 以获得更稳定的可用性与更高配额。

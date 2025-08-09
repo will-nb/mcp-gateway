@@ -62,3 +62,8 @@ Authorization: Bearer {ACCESS_TOKEN}
 
 ### 缓存与合规
 - 按合同限制缓存/展示范围；OCLC 通常限制大规模缓存与再分发；务必核对协议
+
+### Key / 注册信息
+- 注册入口: https://developer.oclc.org/docs/worldcat-search-api
+- 注册/费用: 需要 OCLC 账号和 WSKey，部分端点需 OAuth。为收费服务，通常面向机构订阅或合作院校；具体费用与权限以 OCLC 官方为准。
+- 不注册的区别: 无法访问正式 Search API。仅开放样例/沙盒；生产调用需 WSKey/OAuth。

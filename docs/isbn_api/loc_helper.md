@@ -47,3 +47,8 @@ def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> Dict[str, Any]:
 
 ### 合规
 - 遵守 LoC 数据使用指引；建议归因
+
+### Key / 注册信息
+- 注册入口: https://libraryofcongress.github.io/data-exploration/
+- 注册/费用: LoC 的 JSON 搜索接口通常无需 Key，免费使用；请遵守访问频率建议。
+- 不注册的区别: 无需注册即可使用；但需礼貌访问避免被限速。
