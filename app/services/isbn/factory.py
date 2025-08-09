@@ -8,8 +8,14 @@ from app.services.isbn import (
     SOURCE_OPEN_LIBRARY,
     SOURCE_ISBNDB,
     SOURCE_LOC,
+    SOURCE_WORLDCAT,
+    SOURCE_NDL,
+    SOURCE_BRITISH_LIBRARY,
+    SOURCE_KOLISNET,
+    SOURCE_NLC_CHINA,
+    SOURCE_HKPL,
 )
-from app.services.isbn import google_books, open_library, isbndb, loc
+from app.services.isbn import google_books, open_library, isbndb, loc, worldcat, ndl, british_library, kolisnet, nlc, hkpl
 
 
 def fetch_by_isbn(source: str, isbn: str, *, api_key: Optional[str] = None, lang: Optional[str] = None, timeout: float = 10.0) -> NormalizedBook:
@@ -23,4 +29,20 @@ def fetch_by_isbn(source: str, isbn: str, *, api_key: Optional[str] = None, lang
         return isbndb.fetch_by_isbn(isbn, api_key=api_key, timeout=timeout)
     if source == SOURCE_LOC:
         return loc.fetch_by_isbn(isbn, timeout=timeout)
+    if source == SOURCE_WORLDCAT:
+        if not api_key:
+            raise ValueError("WorldCat requires wskey")
+        return worldcat.fetch_by_isbn(isbn, wskey=api_key, timeout=timeout)
+    if source == SOURCE_NDL:
+        return ndl.fetch_by_isbn(isbn, timeout=timeout)
+    if source == SOURCE_BRITISH_LIBRARY:
+        return british_library.fetch_by_isbn(isbn, timeout=timeout)
+    if source == SOURCE_KOLISNET:
+        if not api_key:
+            raise ValueError("KOLIS-NET requires service_key")
+        return kolisnet.fetch_by_isbn(isbn, service_key=api_key, timeout=timeout)
+    if source == SOURCE_NLC_CHINA:
+        return nlc.fetch_by_isbn(isbn, timeout=timeout)
+    if source == SOURCE_HKPL:
+        return hkpl.fetch_by_isbn(isbn, timeout=timeout)
     raise ValueError(f"Unsupported source: {source}")

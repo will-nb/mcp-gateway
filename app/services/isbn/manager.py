@@ -17,6 +17,7 @@ from app.services.isbn import (
     SOURCE_GOOGLE_BOOKS,
     SOURCE_OPEN_LIBRARY,
     SOURCE_ISBNDB,
+    SOURCE_WORLDCAT,
 )
 from app.services.isbn.client_base import RateLimitError
 
@@ -31,7 +32,7 @@ COUNTRY_PRIORITY: Dict[str, List[str]] = {
 }
 
 # 通用优先级：免费强 → 免费小 → 收费
-GLOBAL_PRIORITY = [SOURCE_LOC, SOURCE_OPEN_LIBRARY, SOURCE_GOOGLE_BOOKS, SOURCE_ISBNDB]
+GLOBAL_PRIORITY = [SOURCE_LOC, SOURCE_OPEN_LIBRARY, SOURCE_GOOGLE_BOOKS, SOURCE_WORLDCAT, SOURCE_ISBNDB]
 
 
 def _rate_limit_key(source: str) -> str:
