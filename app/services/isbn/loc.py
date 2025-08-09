@@ -34,3 +34,34 @@ def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> NormalizedBook:
     }
     client.close()
     return book
+
+
+def search_by_title(title: str, *, max_results: int = 5, timeout: float = 10.0) -> list[NormalizedBook]:
+    client = HttpClient(base_url="https://www.loc.gov", timeout=timeout)
+    r = client.get("/books/", params={"q": title, "fo": "json", "c": max_results})
+    if r.status_code >= 400:
+        client.close()
+        raise HttpError(r.status_code, r.text)
+    data = r.json()
+    results = []
+    for it in (data.get("results") or [])[:max_results]:
+        nb: NormalizedBook = {
+            "source": "loc",
+            "isbn": "",
+            "title": it.get("title"),
+            "subtitle": None,
+            "creators": [{"name": it.get("creator"), "role": None}] if it.get("creator") else [],
+            "publisher": it.get("publisher"),
+            "published_date": it.get("date"),
+            "language": it.get("language"),
+            "subjects": it.get("subject") or [],
+            "description": None,
+            "page_count": None,
+            "identifiers": {"loc_item": it.get("id")},
+            "cover": {},
+            "preview_urls": [it.get("id")] if it.get("id") else [],
+            "raw": it,
+        }
+        results.append(nb)
+    client.close()
+    return results

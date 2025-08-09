@@ -45,3 +45,36 @@ def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> NormalizedBook:
         book["preview_urls"].append(payload.get("url"))
     client.close()
     return book
+
+
+def search_by_title(title: str, *, max_results: int = 5, timeout: float = 10.0) -> List[NormalizedBook]:
+    # Open Library search API
+    client = HttpClient(base_url="https://openlibrary.org", timeout=timeout)
+    r = client.get("/search.json", params={"title": title, "limit": max_results})
+    if r.status_code >= 400:
+        client.close()
+        raise HttpError(r.status_code, r.text)
+    data = r.json()
+    docs = data.get("docs") or []
+    results: List[NormalizedBook] = []
+    for d in docs:
+        nb: NormalizedBook = {
+            "source": "open_library",
+            "isbn": (d.get("isbn") or [""])[0] if isinstance(d.get("isbn"), list) else "",
+            "title": d.get("title"),
+            "subtitle": None,
+            "creators": [{"name": a, "role": None} for a in (d.get("author_name") or [])],
+            "publisher": (d.get("publisher") or [None])[0] if d.get("publisher") else None,
+            "published_date": str(d.get("first_publish_year")) if d.get("first_publish_year") else None,
+            "language": None,
+            "subjects": d.get("subject") or [],
+            "description": None,
+            "page_count": None,
+            "identifiers": {},
+            "cover": {},
+            "preview_urls": [],
+            "raw": d,
+        }
+        results.append(nb)
+    client.close()
+    return results

@@ -19,3 +19,8 @@ class NormalizedBook(TypedDict, total=False):
     cover: Dict[str, Optional[str]]
     preview_urls: List[str]
     raw: Dict[str, Any]
+
+
+class SearchResult(TypedDict, total=False):
+    source: str
+    items: List[NormalizedBook]
