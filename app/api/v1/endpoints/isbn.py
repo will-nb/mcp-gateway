@@ -19,7 +19,7 @@ class ResolveIsbnRequest(BaseModel):
     forceSource: Optional[str] = Field(None, description="强制指定来源常量，例如 google_books/open_library/loc 等")
     preferOrder: Optional[List[str]] = Field(None, description="可选的来源优先顺序，靠前优先")
     timeout: float = Field(10.0, description="超时秒数")
-    apiKeys: Optional[Dict[str, str]] = Field(None, description="各来源所需的 key，例如 {google_books, isbndb, worldcat, kolisnet}")
+    # apiKey 仅从服务端配置读取，不允许从接口传入
 
 
 @router.post(
@@ -100,7 +100,7 @@ def isbn_resolve(req: ResolveIsbnRequest) -> ApiStandardResponse:
             req.isbn,
             country_code=req.countryCode,
             prefer_order=req.preferOrder,
-            api_keys=req.apiKeys,
+            api_keys=None,
             timeout=req.timeout,
             force_source=req.forceSource,
         )

@@ -18,7 +18,7 @@ class SearchByTitleRequest(BaseModel):
     maxResultsPerSource: int = Field(5, description="每个来源最大返回条数")
     preferOrder: Optional[List[str]] = Field(None, description="来源优先级（如 loc/open_library/google_books）")
     forceSource: Optional[str] = Field(None, description="强制来源")
-    apiKeys: Optional[Dict[str, str]] = Field(None, description="可选 key 集（google_books 等）")
+    # apiKey 从服务端配置读取，不允许从接口传入
     lang: Optional[str] = Field(None, description="语言限制（例如 en/zh）")
     timeout: float = Field(10.0, description="超时")
 
@@ -56,7 +56,7 @@ def search_books_by_title(req: SearchByTitleRequest) -> ApiStandardResponse:
         req.title,
         max_results_per_source=req.maxResultsPerSource,
         min_similarity=req.minSimilarity,
-        api_keys=req.apiKeys,
+        api_keys=None,
         lang=req.lang,
         timeout=req.timeout,
         prefer_order=req.preferOrder,

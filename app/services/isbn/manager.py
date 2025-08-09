@@ -87,21 +87,27 @@ def resolve_isbn(isbn: str, *, country_code: Optional[str] = None, prefer_order:
         order = [force_source]
 
     # 3) 逐一尝试调用，遇到 429 或明确限流错误则标记 24h 不再调用
+    s = get_settings()
     for src in order:
         if _is_rate_limited(src):
             continue
         try:
             if src == SOURCE_GOOGLE_BOOKS:
-                doc = fetch_from_source(src, isbn, api_key=(api_keys or {}).get("google_books"), timeout=timeout)
+                doc = fetch_from_source(src, isbn, api_key=(api_keys or {}).get("google_books") or s.google_books_api_key, timeout=timeout)
             elif src == SOURCE_OPEN_LIBRARY:
                 doc = fetch_from_source(src, isbn, timeout=timeout)
             elif src == SOURCE_ISBNDB:
-                key = (api_keys or {}).get("isbndb")
+                key = (api_keys or {}).get("isbndb") or s.isbndb_api_key
                 if not key:
                     continue
                 doc = fetch_from_source(src, isbn, api_key=key, timeout=timeout)
             elif src == SOURCE_LOC:
                 doc = fetch_from_source(src, isbn, timeout=timeout)
+            elif src == SOURCE_WORLDCAT:
+                key = (api_keys or {}).get("worldcat") or s.worldcat_wskey
+                if not key:
+                    continue
+                doc = fetch_from_source(src, isbn, api_key=key, timeout=timeout)
             else:
                 # 其他来源暂未实现或需要签约：跳过
                 continue

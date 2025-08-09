@@ -29,6 +29,11 @@ class AppSettings:
     # MongoDB connection
     mongo_uri: str
     mongo_db: str
+    # ISBN API keys
+    google_books_api_key: str | None
+    isbndb_api_key: str | None
+    worldcat_wskey: str | None
+    kolisnet_service_key: str | None
     # Qwen / DashScope (OpenAI-compatible)
     dashscope_api_key: str | None
     dashscope_base_url: str
@@ -77,6 +82,12 @@ def get_settings() -> AppSettings:
     # MongoDB (host machine)
     mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017")
     mongo_db = os.getenv("MONGO_DB", "mcp_gateway")
+
+    # ISBN API keys
+    google_books_api_key = os.getenv("GOOGLE_BOOKS_API_KEY")
+    isbndb_api_key = os.getenv("ISBNDB_API_KEY")
+    worldcat_wskey = os.getenv("WORLDCAT_WSKEY")
+    kolisnet_service_key = os.getenv("KOLISNET_SERVICE_KEY")
 
     # Qwen / DashScope (OpenAI compatible)
     dashscope_api_key = os.getenv("DASHSCOPE_API_KEY")
@@ -145,4 +156,8 @@ def get_settings() -> AppSettings:
         anthropic_base_url=anthropic_base_url,
         mongo_uri=mongo_uri,
         mongo_db=mongo_db,
+        google_books_api_key=google_books_api_key,
+        isbndb_api_key=isbndb_api_key,
+        worldcat_wskey=worldcat_wskey,
+        kolisnet_service_key=kolisnet_service_key,
     )
