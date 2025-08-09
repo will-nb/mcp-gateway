@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from qdrant_client import models
 
 from app.core.config import get_settings
-from app.schemas.response import SuccessResponse
+from app.schemas.common import ApiStandardResponse, create_object_response, DataType
 from app.services.qdrant import get_qdrant_service
 
 
@@ -17,13 +17,13 @@ class EnsureCollectionRequest(BaseModel):
     vector_size: Optional[int] = Field(None, description="Defaults to configured qdrant_vector_dim")
 
 
-@router.post("/qdrant/ensure-collection", response_model=SuccessResponse[bool], summary="Ensure a collection exists")
-def ensure_collection(req: EnsureCollectionRequest) -> SuccessResponse[bool]:
+@router.post("/qdrant/ensure-collection", response_model=ApiStandardResponse, summary="Ensure a collection exists")
+def ensure_collection(req: EnsureCollectionRequest) -> ApiStandardResponse:
     s = get_settings()
     name = req.collection_name or s.qdrant_default_collection
     dim = req.vector_size or s.qdrant_vector_dim
     created = get_qdrant_service().ensure_collection(name, dim)
-    return SuccessResponse(data=created)
+    return create_object_response(message="OK", data_value={"created": created}, data_type=DataType.OBJECT, code=200)
 
 
 class UpsertPoint(BaseModel):
@@ -37,13 +37,13 @@ class UpsertPointsRequest(BaseModel):
     points: List[UpsertPoint]
 
 
-@router.post("/qdrant/upsert", response_model=SuccessResponse[str], summary="Upsert points")
-def upsert_points(req: UpsertPointsRequest) -> SuccessResponse[str]:
+@router.post("/qdrant/upsert", response_model=ApiStandardResponse, summary="Upsert points")
+def upsert_points(req: UpsertPointsRequest) -> ApiStandardResponse:
     s = get_settings()
     name = req.collection_name or s.qdrant_default_collection
     pts = [models.PointStruct(id=p.id, vector=p.vector, payload=p.payload) for p in req.points]
     res = get_qdrant_service().upsert_points(name, pts)
-    return SuccessResponse(data=res.status.value)
+    return create_object_response(message="OK", data_value={"status": res.status.value}, data_type=DataType.OBJECT, code=200)
 
 
 class SimpleSearchRequest(BaseModel):
@@ -62,10 +62,11 @@ class SimpleSearchResponse(BaseModel):
     results: List[ScoredPoint]
 
 
-@router.post("/qdrant/search", response_model=SuccessResponse[SimpleSearchResponse], summary="Simple vector search")
-def simple_search(req: SimpleSearchRequest) -> SuccessResponse[SimpleSearchResponse]:
+@router.post("/qdrant/search", response_model=ApiStandardResponse, summary="Simple vector search")
+def simple_search(req: SimpleSearchRequest) -> ApiStandardResponse:
     s = get_settings()
     name = req.collection_name or s.qdrant_default_collection
     result = get_qdrant_service().query(name, req.vector, limit=req.limit)
     items = [ScoredPoint(id=p.id, score=p.score, payload=p.payload) for p in result.points]
-    return SuccessResponse(data=SimpleSearchResponse(results=items))
+    payload = SimpleSearchResponse(results=items).model_dump()
+    return create_object_response(message="OK", data_value=payload, data_type=DataType.OBJECT, code=200)
