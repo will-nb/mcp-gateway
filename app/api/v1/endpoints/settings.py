@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from app.core.config import get_settings
-from app.schemas.response import SuccessResponse
+from app.schemas.common import ApiStandardResponse, create_object_response, DataType
 from pydantic import BaseModel, Field
 
 
@@ -25,8 +25,8 @@ class PublicSettings(BaseModel):
     redis_key_prefix: str = Field(default_factory=lambda: get_settings().redis_key_prefix)
 
 
-@router.get("/settings", response_model=SuccessResponse[PublicSettings], summary="Public settings")
-def get_public_settings() -> SuccessResponse[PublicSettings]:
+@router.get("/settings", response_model=ApiStandardResponse, summary="Public settings")
+def get_public_settings() -> ApiStandardResponse:
     s = get_settings()
     ps = PublicSettings(
         app_name=s.app_name,
@@ -42,4 +42,9 @@ def get_public_settings() -> SuccessResponse[PublicSettings]:
         redis_db=s.redis_db,
         redis_key_prefix=s.redis_key_prefix,
     )
-    return SuccessResponse(data=ps)
+    return create_object_response(
+        message="OK",
+        data_value=ps.model_dump(by_alias=True),
+        data_type=DataType.OBJECT,
+        code=200,
+    )

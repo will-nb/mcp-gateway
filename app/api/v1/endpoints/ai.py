@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.core.config import get_settings
-from app.schemas.response import SuccessResponse
+from app.schemas.common import ApiStandardResponse, create_object_response, DataType
 from app.services.qwen_client import get_qwen_client
 from app.services.semantic_cache import get_semantic_cache
 
@@ -32,7 +32,7 @@ class ChatResponse(BaseModel):
 
 @router.post(
     "/ai/chat",
-    response_model=SuccessResponse[ChatResponse],
+    response_model=ApiStandardResponse,
     summary="Qwen 聊天补全（OpenAI 兼容后端）",
     description=(
         "中文说明:\n"
@@ -57,7 +57,7 @@ class ChatResponse(BaseModel):
         }
     },
 )
-def chat(req: ChatRequest) -> SuccessResponse[ChatResponse]:
+def chat(req: ChatRequest) -> ApiStandardResponse:
     s = get_settings()
     if req.model not in s.qwen_allowed_models:
         raise HTTPException(status_code=400, detail=f"Model {req.model} not allowed")
@@ -68,7 +68,16 @@ def chat(req: ChatRequest) -> SuccessResponse[ChatResponse]:
         probe = cache.query(user_msgs[-1].content)
         if probe is not None:
             score, payload = probe
-            return SuccessResponse(data=ChatResponse(raw=payload.get('raw', {}), cache_hit=True, cache_score=score))
+            return create_object_response(
+                message="OK",
+                data_value={
+                    "raw": payload.get("raw", {}),
+                    "cacheHit": True,
+                    "cacheScore": score,
+                },
+                data_type=DataType.AI,
+                code=200,
+            )
 
     client = get_qwen_client()
     result = client.chat_completion(model=req.model, messages=[m.model_dump() for m in req.messages], stream=req.stream, extra_body=req.extra_body)
@@ -76,4 +85,9 @@ def chat(req: ChatRequest) -> SuccessResponse[ChatResponse]:
     # write to cache
     if user_msgs:
         cache.upsert(user_msgs[-1].content, {"raw": result})
-    return SuccessResponse(data=ChatResponse(raw=result, cache_hit=False))
+    return create_object_response(
+        message="OK",
+        data_value={"raw": result, "cacheHit": False},
+        data_type=DataType.AI,
+        code=200,
+    )

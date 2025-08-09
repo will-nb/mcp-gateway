@@ -23,12 +23,10 @@ def test_health_mongo_ok(monkeypatch):
     monkeypatch.setattr("app.services.mongo_client.get_mongo_client", lambda: FakeMongoClient())
 
     client = TestClient(app)
-    res = client.get("/api/v1/health").json()
-    assert res["code"] == 0
-    data = res["data"]
-    assert data["qdrant"]["reachable"] is True
-    assert data["redis"]["reachable"] is True
-    assert data["mongo"]["reachable"] is True
+    res = client.get("/api/v1/welcome/health").json()
+    assert res["success"] is True
+    assert res["dataType"] == "health"
+    assert res["data"]["services"]["mongodb"]["status"] == "healthy"
 
 
 def test_health_mongo_down(monkeypatch):
@@ -48,7 +46,7 @@ def test_health_mongo_down(monkeypatch):
     monkeypatch.setattr("app.services.mongo_client.get_mongo_client", lambda: FakeMongoClient())
 
     client = TestClient(app)
-    res = client.get("/api/v1/health").json()
-    assert res["code"] == 0
-    data = res["data"]
-    assert data["mongo"]["reachable"] is False
+    res = client.get("/api/v1/welcome/health").json()
+    assert res["success"] is True
+    assert res["dataType"] == "health"
+    assert res["data"]["services"]["mongodb"]["status"] == "unhealthy"

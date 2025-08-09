@@ -27,5 +27,6 @@ def test_chat_completion_ok(monkeypatch):
     })
     assert r.status_code == 200
     body = r.json()
-    assert body['code'] == 0
+    assert body['success'] is True
+    assert body['dataType'] == 'ai_chat'
     assert 'raw' in body['data']
