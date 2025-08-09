@@ -26,6 +26,9 @@ class AppSettings:
     redis_db: int
     redis_password: str | None
     redis_key_prefix: str
+    # MongoDB connection
+    mongo_uri: str
+    mongo_db: str
     # Qwen / DashScope (OpenAI-compatible)
     dashscope_api_key: str | None
     dashscope_base_url: str
@@ -70,6 +73,10 @@ def get_settings() -> AppSettings:
     redis_db = int(os.getenv("REDIS_DB", "1"))
     redis_password = os.getenv("REDIS_PASSWORD")  # None by default
     redis_key_prefix = os.getenv("REDIS_KEY_PREFIX", "mcp")
+
+    # MongoDB (host machine)
+    mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+    mongo_db = os.getenv("MONGO_DB", "mcp_gateway")
 
     # Qwen / DashScope (OpenAI compatible)
     dashscope_api_key = os.getenv("DASHSCOPE_API_KEY")
@@ -136,4 +143,6 @@ def get_settings() -> AppSettings:
         gemini_base_url=gemini_base_url,
         anthropic_api_key=anthropic_api_key,
         anthropic_base_url=anthropic_base_url,
+        mongo_uri=mongo_uri,
+        mongo_db=mongo_db,
     )

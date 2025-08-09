@@ -26,11 +26,13 @@ class SemanticCache:
         if not self.enabled:
             return None
         vec = char_ngram_embedding(text, self.s.qdrant_cache_vector_dim)
-        res = self.q.query(self.s.qdrant_cache_collection, vec, limit=1)
+        try:
+            res = self.q.query(self.s.qdrant_cache_collection, vec, limit=1)
+        except Exception:
+            return None
         if not res.points:
             return None
         top = res.points[0]
-        # Qdrant cosine similarity returns score in [0,1]
         if top.score is None or top.score < self.s.qdrant_cache_score_threshold:
             return None
         return (top.score, top.payload or {})
@@ -41,7 +43,10 @@ class SemanticCache:
         vec = char_ngram_embedding(text, self.s.qdrant_cache_vector_dim)
         point_id = uuid.uuid5(uuid.NAMESPACE_URL, text).int & ((1 << 63) - 1)
         pt = models.PointStruct(id=point_id, vector=vec, payload=payload)
-        self.q.upsert_points(self.s.qdrant_cache_collection, [pt])
+        try:
+            self.q.upsert_points(self.s.qdrant_cache_collection, [pt])
+        except Exception:
+            return
 
 
 def get_semantic_cache() -> SemanticCache:

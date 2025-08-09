@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from app.core.config import get_settings
-from app.schemas.health import HealthResponse, QdrantHealth, RedisHealth
+from app.schemas.health import HealthResponse, QdrantHealth, RedisHealth, MongoHealth
 
 
 router = APIRouter()
@@ -50,6 +50,23 @@ def get_health() -> SuccessResponse[HealthResponse]:
         key_prefix=settings.redis_key_prefix,
     )
 
+    # probe mongo
+    from app.services.mongo_client import get_mongo_client
+    mongo_reachable = False
+    try:
+        mcli = get_mongo_client()
+        # server_info will trigger a ping/handshake
+        mcli.server_info()
+        mongo_reachable = True
+    except Exception:
+        mongo_reachable = False
+
+    mongo = MongoHealth(
+        reachable=mongo_reachable,
+        uri=settings.mongo_uri,
+        db=settings.mongo_db,
+    )
+
     return SuccessResponse(
-        data=HealthResponse(status="ok", version=settings.version, qdrant=qdrant, redis=redis)
+        data=HealthResponse(status="ok", version=settings.version, qdrant=qdrant, redis=redis, mongo=mongo)
     )
