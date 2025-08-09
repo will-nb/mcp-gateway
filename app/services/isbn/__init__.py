@@ -1,0 +1,25 @@
+SOURCE_GOOGLE_BOOKS = "google_books"
+SOURCE_OPEN_LIBRARY = "open_library"
+SOURCE_ISBNDB = "isbndb"
+SOURCE_WORLDCAT = "worldcat"
+SOURCE_NLC_CHINA = "nlc_china"
+SOURCE_HKPL = "hkpl"
+SOURCE_NDL = "ndl"
+SOURCE_KOLISNET = "kolisnet"
+SOURCE_BRITISH_LIBRARY = "british_library"
+SOURCE_LOC = "loc"
+SOURCE_MANUAL = "manual"
+
+__all__ = [
+    "SOURCE_GOOGLE_BOOKS",
+    "SOURCE_OPEN_LIBRARY",
+    "SOURCE_ISBNDB",
+    "SOURCE_WORLDCAT",
+    "SOURCE_NLC_CHINA",
+    "SOURCE_HKPL",
+    "SOURCE_NDL",
+    "SOURCE_KOLISNET",
+    "SOURCE_BRITISH_LIBRARY",
+    "SOURCE_LOC",
+    "SOURCE_MANUAL",
+]
