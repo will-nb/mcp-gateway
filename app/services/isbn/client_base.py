@@ -27,3 +27,13 @@ class HttpClient:
             self._client.close()
         except Exception:
             pass
+
+
+class RateLimitError(Exception):
+    pass
+
+
+class HttpError(Exception):
+    def __init__(self, status_code: int, message: str | None = None):
+        super().__init__(message or f"HTTP error: {status_code}")
+        self.status_code = status_code
