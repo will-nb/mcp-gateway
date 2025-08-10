@@ -9,7 +9,6 @@ from app.services.isbn import (
     SOURCE_OPEN_LIBRARY,
     SOURCE_GOOGLE_BOOKS,
 )
-from app.core.config import get_settings
 from app.utils.text_similarity import jaccard_token_similarity
 
 # 默认顺序：免费强 → 免费小 → 另一个全球
@@ -17,22 +16,17 @@ DEFAULT_SOURCES = [SOURCE_LOC, SOURCE_OPEN_LIBRARY, SOURCE_GOOGLE_BOOKS]
 
 
 def search_title(title: str, *, max_results_per_source: int = 5, min_similarity: float = 0.5, api_keys: Optional[Dict[str, str]] = None, lang: Optional[str] = None, timeout: float = 10.0, prefer_order: Optional[List[str]] = None, force_source: Optional[str] = None) -> List[NormalizedBook]:
+    # 简化：不再支持外部优先序，仅可选强制来源
     order = list(DEFAULT_SOURCES)
-    if prefer_order:
-        for s in reversed(prefer_order):
-            if s in order:
-                order.remove(s)
-            order.insert(0, s)
     if force_source:
         order = [force_source]
 
     collected: List[NormalizedBook] = []
     seen = set()
-    s = get_settings()
     for src in order:
         try:
             if src == SOURCE_GOOGLE_BOOKS:
-                items = search_from_source(src, title, api_key=(api_keys or {}).get("google_books") or s.google_books_api_key, lang=lang, max_results=max_results_per_source, timeout=timeout)
+                items = search_from_source(src, title, api_key=None, lang=None, max_results=max_results_per_source, timeout=timeout)
             elif src == SOURCE_OPEN_LIBRARY:
                 items = search_from_source(src, title, max_results=max_results_per_source, timeout=timeout)
             elif src == SOURCE_LOC:

@@ -14,8 +14,9 @@ from app.services.isbn import (
     SOURCE_KOLISNET,
     SOURCE_NLC_CHINA,
     SOURCE_HKPL,
+    SOURCE_JUHE_ISBN,
 )
-from app.services.isbn import google_books, open_library, isbndb, loc, worldcat, ndl, british_library, kolisnet, nlc, hkpl
+from app.services.isbn import google_books, open_library, isbndb, loc, worldcat, ndl, british_library, kolisnet, nlc, hkpl, juhe
 
 
 def fetch_by_isbn(source: str, isbn: str, *, api_key: Optional[str] = None, lang: Optional[str] = None, timeout: float = 10.0) -> NormalizedBook:
@@ -45,6 +46,10 @@ def fetch_by_isbn(source: str, isbn: str, *, api_key: Optional[str] = None, lang
         return nlc.fetch_by_isbn(isbn, timeout=timeout)
     if source == SOURCE_HKPL:
         return hkpl.fetch_by_isbn(isbn, timeout=timeout)
+    if source == SOURCE_JUHE_ISBN:
+        if not api_key:
+            raise ValueError("Juhe ISBN requires api_key")
+        return juhe.fetch_by_isbn(isbn, api_key=api_key, timeout=timeout)
     raise ValueError(f"Unsupported source: {source}")
 
 

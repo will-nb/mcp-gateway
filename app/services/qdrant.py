@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from functools import lru_cache
 from typing import Iterable, List, Optional, Sequence
 
 from qdrant_client import QdrantClient, models
@@ -29,8 +28,7 @@ class QdrantService:
             prefer_grpc=prefer_grpc,
             **kwargs,
         )
-        # smoke check
-        self._client.get_collections()
+        # Do not call network on init; health checks will probe explicitly
 
     # -------- Access to raw client --------
     def get_client(self) -> QdrantClient:
@@ -131,7 +129,6 @@ class QdrantService:
         )
 
 
-@lru_cache(maxsize=1)
 def get_qdrant_service() -> QdrantService:
     s = get_settings()
     return QdrantService(

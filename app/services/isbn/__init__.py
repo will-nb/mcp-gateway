@@ -9,6 +9,7 @@ SOURCE_KOLISNET = "kolisnet"
 SOURCE_BRITISH_LIBRARY = "british_library"
 SOURCE_LOC = "loc"
 SOURCE_MANUAL = "manual"
+SOURCE_JUHE_ISBN = "juhe_isbn"
 
 __all__ = [
     "SOURCE_GOOGLE_BOOKS",
@@ -22,4 +23,5 @@ __all__ = [
     "SOURCE_BRITISH_LIBRARY",
     "SOURCE_LOC",
     "SOURCE_MANUAL",
+    "SOURCE_JUHE_ISBN",
 ]

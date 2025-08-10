@@ -12,7 +12,7 @@ def test_isbn_resolve_force_source_rate_limited(monkeypatch):
     monkeypatch.setattr("app.services.isbn.manager.resolve_isbn", fake_resolve)
 
     client = TestClient(app)
-    r = client.post("/api/v1/isbn/resolve", json={
+    r = client.post("/api/v1/books/search-isbn", json={
         "isbn": "9780134685991",
         "forceSource": "google_books"
     })
@@ -41,7 +41,7 @@ def test_isbn_resolve_ok(monkeypatch):
     monkeypatch.setattr("app.services.isbn.manager.resolve_isbn", fake_resolve)
 
     client = TestClient(app)
-    r = client.post("/api/v1/isbn/resolve", json={
+    r = client.post("/api/v1/books/search-isbn", json={
         "isbn": "9780134685991"
     })
     assert r.status_code == 200

@@ -34,6 +34,7 @@ class AppSettings:
     isbndb_api_key: str | None
     worldcat_wskey: str | None
     kolisnet_service_key: str | None
+    juhe_isbn_api_key: str | None
     # Qwen / DashScope (OpenAI-compatible)
     dashscope_api_key: str | None
     dashscope_base_url: str
@@ -88,6 +89,7 @@ def get_settings() -> AppSettings:
     isbndb_api_key = os.getenv("ISBNDB_API_KEY")
     worldcat_wskey = os.getenv("WORLDCAT_WSKEY")
     kolisnet_service_key = os.getenv("KOLISNET_SERVICE_KEY")
+    juhe_isbn_api_key = os.getenv("JUHE_ISBN_API_KEY")
 
     # Qwen / DashScope (OpenAI compatible)
     dashscope_api_key = os.getenv("DASHSCOPE_API_KEY")
@@ -160,4 +162,5 @@ def get_settings() -> AppSettings:
         isbndb_api_key=isbndb_api_key,
         worldcat_wskey=worldcat_wskey,
         kolisnet_service_key=kolisnet_service_key,
+        juhe_isbn_api_key=juhe_isbn_api_key,
     )
