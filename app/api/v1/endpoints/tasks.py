@@ -40,6 +40,11 @@ async def _handle_enqueue(
     x_priority: Optional[TaskPriority] = Header(default=None, alias="X-Priority"),
     idempotency_key: Optional[str] = Header(default=None, alias="Idempotency-Key"),
 ) -> ApiStandardResponse:
+    # Apply default sync timeout from settings if not provided
+    s = get_settings()
+    if req.sync_timeout_ms is None:
+        req.sync_timeout_ms = s.interactive_sync_timeout_ms
+
     job_id, _ = enqueue_task(
         task_type=task_type,
         req=req,

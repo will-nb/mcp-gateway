@@ -4,6 +4,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Tuple
+from urllib.parse import urlparse
 
 from fastapi import Header
 from pymongo.collection import Collection
@@ -68,6 +69,11 @@ def enqueue_task(
     priority: Optional[TaskPriority],
     idempotency_key: Optional[str],
 ) -> Tuple[str, str]:
+    # Basic callback whitelist validation
+    if req.callback_url:
+        if not _is_callback_allowed(req.callback_url):
+            raise ValueError("callbackUrl not allowed by whitelist")
+
     # Idempotency check
     existing = _idempotent_find(task_type, idempotency_key, req.payload_ref)
     if existing:
@@ -154,3 +160,35 @@ def wait_for_completion(job_id: str, timeout_ms: int) -> Optional[Dict[str, Any]
             return doc
         time.sleep(0.05)
     return None
+
+
+def _is_callback_allowed(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https"}:
+            return False
+        host = parsed.hostname or ""
+        if not host:
+            return False
+        s = get_settings()
+        for entry in s.callback_domain_whitelist:
+            if entry.startswith('.'):
+                # suffix match (e.g., .fly.dev)
+                if host.endswith(entry):
+                    return True
+            else:
+                if host == entry:
+                    return True
+        return False
+    except Exception:
+        return False
+
+
+def sign_callback_payload(secret: str, timestamp: str, body_json: str) -> str:
+    """Compute HMAC-SHA256 signature header value 'sha256=<hex>' for callback payload."""
+    import hmac
+    import hashlib
+
+    signing_string = f"{timestamp}.{body_json}".encode("utf-8")
+    digest = hmac.new(secret.encode("utf-8"), signing_string, hashlib.sha256).hexdigest()
+    return f"sha256={digest}"

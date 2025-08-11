@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import List
+from typing import List, Dict, Any
 
 
 @dataclass(frozen=True)
@@ -50,6 +50,14 @@ class AppSettings:
     qdrant_cache_collection: str
     qdrant_cache_vector_dim: int
     qdrant_cache_score_threshold: float
+    # Interactive sync fast-path default (ms)
+    interactive_sync_timeout_ms: int
+    # Callback security
+    callback_hmac_secret: str | None
+    callback_domain_whitelist: List[str]
+    # Provider rate/budget configs (simple dicts for now)
+    provider_limits: Dict[str, Any]
+    provider_budgets: Dict[str, Any]
 
 
 def _parse_bool_env(value: str | None, default: bool) -> bool:
@@ -120,6 +128,46 @@ def get_settings() -> AppSettings:
     qdrant_cache_vector_dim = int(os.getenv("QDRANT_CACHE_VECTOR_DIM", "256"))
     qdrant_cache_score_threshold = float(os.getenv("QDRANT_CACHE_SCORE_THRESHOLD", "0.92"))
 
+    # Interactive sync default (global)
+    interactive_sync_timeout_ms = int(os.getenv("INTERACTIVE_SYNC_TIMEOUT_MS", "2500"))
+
+    # Callback security
+    callback_hmac_secret = os.getenv("CALLBACK_HMAC_SECRET")
+    # Comma-separated hosts or suffix patterns ('.fly.dev' means any subdomain)
+    callback_domain_whitelist_env = os.getenv(
+        "CALLBACK_DOMAIN_WHITELIST",
+        ",".join([
+            "localhost",
+            "127.0.0.1",
+            "host.docker.internal",
+            ".fly.dev",
+        ]),
+    )
+    callback_domain_whitelist = [h.strip() for h in callback_domain_whitelist_env.split(",") if h.strip()]
+
+    # Provider limits/budgets (JSON; fallback to permissive defaults)
+    import json
+    provider_limits_default = {
+        "google_books": {"qps": 10, "burst": 20},
+        "open_library": {"qps": 5, "burst": 10},
+        "isbndb": {"qps": 2, "burst": 4},
+        "ai": {"global_qps": 100, "burst": 200, "max_concurrency_per_tenant": 2},
+    }
+    provider_budgets_default = {
+        "ai": {"monthly_budget_usd": 10_000_000},  # effectively no cap by default
+        "google_books": {"daily_requests": 1_000_000},
+        "open_library": {"daily_requests": 1_000_000},
+        "isbndb": {"daily_requests": 1_000_000},
+    }
+    try:
+        provider_limits = json.loads(os.getenv("PROVIDER_LIMITS", "")) or provider_limits_default
+    except Exception:
+        provider_limits = provider_limits_default
+    try:
+        provider_budgets = json.loads(os.getenv("PROVIDER_BUDGETS", "")) or provider_budgets_default
+    except Exception:
+        provider_budgets = provider_budgets_default
+
     if allowed_origins_env.strip() == "*":
         allowed_origins = ["*"]
     else:
@@ -150,6 +198,11 @@ def get_settings() -> AppSettings:
         qdrant_cache_collection=qdrant_cache_collection,
         qdrant_cache_vector_dim=qdrant_cache_vector_dim,
         qdrant_cache_score_threshold=qdrant_cache_score_threshold,
+        interactive_sync_timeout_ms=interactive_sync_timeout_ms,
+        callback_hmac_secret=callback_hmac_secret,
+        callback_domain_whitelist=callback_domain_whitelist,
+        provider_limits=provider_limits,
+        provider_budgets=provider_budgets,
         openai_api_key=openai_api_key,
         openai_base_url=openai_base_url,
         gemini_api_key=gemini_api_key,
