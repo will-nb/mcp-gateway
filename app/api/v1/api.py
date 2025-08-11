@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import settings, qdrant, ai, ocr, book_search
 from app.api.v1.endpoints import welcome
+from app.api.v1.endpoints import tasks
 
 
 api_router = APIRouter()
@@ -13,5 +14,6 @@ api_router.include_router(ai.router, tags=["ai"])
 api_router.include_router(ocr.router, tags=["ocr"]) 
 api_router.include_router(book_search.router, tags=["books"]) 
 api_router.include_router(welcome.router, tags=["Welcome"])
+api_router.include_router(tasks.router, tags=["tasks"])  # mounted at /api/v1/tasks
 
 # 兼容组（OpenAI / Gemini / Claude）由根应用挂载，避免出现 /api/v1/v1 重复
