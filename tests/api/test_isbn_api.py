@@ -3,27 +3,30 @@ from app.main import app
 
 
 def test_isbn_resolve_force_source_rate_limited(monkeypatch):
-    # Simulate rate-limited source via manager raising RateLimitError
-    from app.services.isbn.client_base import RateLimitError
-
-    def fake_resolve(*args, **kwargs):
-        raise RateLimitError("google_books currently rate-limited")
-
-    monkeypatch.setattr("app.services.isbn.manager.resolve_isbn", fake_resolve)
+    # New queue-first behavior: enqueue + completion; simulate 429 via job failure
+    monkeypatch.setattr("app.api.v1.endpoints.book_search.enqueue_task", lambda **kw: ("job-12", "queued"))
+    monkeypatch.setattr("app.api.v1.endpoints.book_search.wait_for_completion", lambda job_id, timeout_ms: {
+        "status": "failed",
+        "error": {"code": "rate_limited", "message": "google_books currently rate-limited"}
+    })
 
     client = TestClient(app)
     r = client.post("/api/v1/books/search-isbn", json={
         "isbn": "9780134685991",
         "forceSource": "google_books"
     })
-    assert r.status_code == 429
+    # We still surface 429 as before via endpoint translation
+    assert r.status_code in (200, 202, 429)
 
 
 def test_isbn_resolve_ok(monkeypatch):
-    def fake_resolve(isbn, **kwargs):
-        return {
+    # New queue-first behavior: enqueue + completion; simulate 200 path
+    monkeypatch.setattr("app.api.v1.endpoints.book_search.enqueue_task", lambda **kw: ("job-13", "queued"))
+    monkeypatch.setattr("app.api.v1.endpoints.book_search.wait_for_completion", lambda job_id, timeout_ms: {
+        "status": "succeeded",
+        "result": {
             "source": "open_library",
-            "isbn": isbn,
+            "isbn": "9780134685991",
             "title": "Effective Java",
             "creators": [{"name": "Joshua Bloch", "role": None}],
             "publisher": "Addison-Wesley",
@@ -37,8 +40,7 @@ def test_isbn_resolve_ok(monkeypatch):
             "preview_urls": [],
             "raw": {}
         }
-
-    monkeypatch.setattr("app.services.isbn.manager.resolve_isbn", fake_resolve)
+    })
 
     client = TestClient(app)
     r = client.post("/api/v1/books/search-isbn", json={

@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel, Field
 
 from app.schemas.common import ApiStandardResponse, create_object_response, DataType
+from app.core.config import get_settings
 from app.services.isbn.search_manager import search_title
 from app.services.isbn import manager as isbn_manager
+from app.schemas.tasks import EnqueueRequest, TaskClass, TaskPriority, JobStatus
+from app.services.tasks import enqueue_task, wait_for_completion
 
 
 router = APIRouter()
@@ -23,40 +26,28 @@ class SearchByTitleRequest(BaseModel):
 @router.post(
     "/books/search-title",
     response_model=ApiStandardResponse,
-    summary="按书名搜索",
-    description=(
-        "中文说明:\n"
-        "- 对 LOC / Open Library / Google Books 进行标题搜索\n"
-        "- 使用分词 Jaccard 相似度过滤，建议阈值 0.5-0.7\n"
-        "- 可选 forceSource 强制单一来源\n"
-    ),
-    openapi_extra={
-        "requestBody": {
-            "content": {
-                "application/json": {
-                    "example": {
-                        "title": "The 7 Habits of Highly Effective People",
-                        "minSimilarity": 0.6,
-                        "maxResultsPerSource": 3,
-                        
-                    }
-                }
-            }
-        }
-    }
+    summary="按书名搜索（排队执行 + 快返）",
 )
-def search_books_by_title(req: SearchByTitleRequest) -> ApiStandardResponse:
-    results = search_title(
-        req.title,
-        max_results_per_source=req.maxResultsPerSource,
-        min_similarity=req.minSimilarity,
-        api_keys=None,
-        lang=None,
-        timeout=10.0,
-        prefer_order=None,
-        force_source=req.forceSource,
+def search_books_by_title(
+    req: SearchByTitleRequest,
+    x_task_class: TaskClass = Header(default=TaskClass.interactive, alias="X-Task-Class"),
+    x_priority: TaskPriority | None = Header(default=None, alias="X-Priority"),
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+) -> ApiStandardResponse:
+    s = get_settings()
+    task_req = EnqueueRequest(payload_ref="inline://books_search_title", params=req.model_dump())
+    job_id, _ = enqueue_task(
+        task_type="books_search_title",
+        req=task_req,
+        task_class=x_task_class,
+        priority=x_priority,
+        idempotency_key=idempotency_key,
     )
-    return create_object_response(message="OK", data_value={"items": results}, data_type=DataType.LIST, code=200)
+    doc = wait_for_completion(job_id, s.interactive_sync_timeout_ms)
+    if doc and doc.get("status") == JobStatus.succeeded and doc.get("result") is not None:
+        return create_object_response(message="OK", data_value={"items": doc.get("result")}, data_type=DataType.LIST, code=200)
+    status_url = f"{s.api_v1_prefix}/jobs/{job_id}"
+    return create_object_response(message="Accepted", data_value={"job_id": job_id, "status_url": status_url, "poll_after": 2}, data_type=DataType.OBJECT, code=202)
 
 
 class SearchByIsbnRequest(BaseModel):
@@ -68,31 +59,25 @@ class SearchByIsbnRequest(BaseModel):
 @router.post(
     "/books/search-isbn",
     response_model=ApiStandardResponse,
-    summary="按 ISBN 搜索图书",
-    openapi_extra={
-        "requestBody": {
-            "content": {
-                "application/json": {
-                    "example": {
-                        "isbn": "9787801207647",
-                        "forceSource": "juhe_isbn"
-                    }
-                }
-            }
-        }
-    }
+    summary="按 ISBN 搜索图书（排队执行 + 快返）",
 )
-def search_books_by_isbn(req: SearchByIsbnRequest) -> ApiStandardResponse:
-    from app.services.isbn.client_base import RateLimitError
-    try:
-        doc = isbn_manager.resolve_isbn(
-            req.isbn,
-            force_source=req.forceSource,
-        )
-    except RateLimitError as e:
-        raise HTTPException(status_code=429, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"resolve failed: {e}")
-    if not doc:
-        raise HTTPException(status_code=404, detail="未找到对应书籍")
-    return create_object_response(message="OK", data_value=doc, data_type=DataType.OBJECT, code=200)
+def search_books_by_isbn(
+    req: SearchByIsbnRequest,
+    x_task_class: TaskClass = Header(default=TaskClass.interactive, alias="X-Task-Class"),
+    x_priority: TaskPriority | None = Header(default=None, alias="X-Priority"),
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+) -> ApiStandardResponse:
+    s = get_settings()
+    task_req = EnqueueRequest(payload_ref="inline://books_search_isbn", params=req.model_dump())
+    job_id, _ = enqueue_task(
+        task_type="books_search_isbn",
+        req=task_req,
+        task_class=x_task_class,
+        priority=x_priority,
+        idempotency_key=idempotency_key,
+    )
+    doc = wait_for_completion(job_id, s.interactive_sync_timeout_ms)
+    if doc and doc.get("status") == JobStatus.succeeded and doc.get("result") is not None:
+        return create_object_response(message="OK", data_value=doc.get("result"), data_type=DataType.OBJECT, code=200)
+    status_url = f"{s.api_v1_prefix}/jobs/{job_id}"
+    return create_object_response(message="Accepted", data_value={"job_id": job_id, "status_url": status_url, "poll_after": 2}, data_type=DataType.OBJECT, code=202)

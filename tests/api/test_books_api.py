@@ -3,13 +3,15 @@ from app.main import app
 
 
 def test_books_search_title_minimal(monkeypatch):
-    # Patch underlying search to return predictable data
-    def fake_search(title, **kwargs):
-        return [
+    # New behavior: enqueue + completion; patch endpoint symbols
+    monkeypatch.setattr("app.api.v1.endpoints.book_search.enqueue_task", lambda **kw: ("job-2", "queued"))
+    monkeypatch.setattr("app.api.v1.endpoints.book_search.wait_for_completion", lambda job_id, timeout_ms: {
+        "status": "succeeded",
+        "result": [
             {
                 "source": "open_library",
                 "isbn": "9780134685991",
-                "title": title,
+                "title": "Effective Java",
                 "creators": [{"name": "Joshua Bloch", "role": None}],
                 "publisher": "Addison-Wesley",
                 "published_date": "2018",
@@ -23,8 +25,7 @@ def test_books_search_title_minimal(monkeypatch):
                 "raw": {}
             }
         ]
-    # Patch the symbol the endpoint actually calls
-    monkeypatch.setattr("app.api.v1.endpoints.book_search.search_title", fake_search)
+    })
 
     client = TestClient(app)
     r = client.post("/api/v1/books/search-title", json={
@@ -39,11 +40,13 @@ def test_books_search_title_minimal(monkeypatch):
 
 
 def test_books_search_isbn_minimal(monkeypatch):
-    # Patch resolve to return predictable data
-    def fake_resolve(isbn, **kwargs):
-        return {
+    # New behavior: enqueue + completion; patch endpoint symbols
+    monkeypatch.setattr("app.api.v1.endpoints.book_search.enqueue_task", lambda **kw: ("job-3", "queued"))
+    monkeypatch.setattr("app.api.v1.endpoints.book_search.wait_for_completion", lambda job_id, timeout_ms: {
+        "status": "succeeded",
+        "result": {
             "source": "juhe_isbn",
-            "isbn": isbn,
+            "isbn": "9787801207647",
             "title": "成功人士的七个习惯",
             "creators": [{"name": "史蒂芬·柯维", "role": None}],
             "publisher": "中国华侨出版社",
@@ -57,8 +60,7 @@ def test_books_search_isbn_minimal(monkeypatch):
             "preview_urls": [],
             "raw": {}
         }
-
-    monkeypatch.setattr("app.services.isbn.manager.resolve_isbn", fake_resolve)
+    })
 
     client = TestClient(app)
     r = client.post("/api/v1/books/search-isbn", json={
