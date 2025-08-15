@@ -45,13 +45,16 @@ async def _handle_enqueue(
     if req.sync_timeout_ms is None:
         req.sync_timeout_ms = s.interactive_sync_timeout_ms
 
-    job_id, _ = enqueue_task(
-        task_type=task_type,
-        req=req,
-        task_class=x_task_class,
-        priority=x_priority,
-        idempotency_key=idempotency_key,
-    )
+    try:
+        job_id, _ = enqueue_task(
+            task_type=task_type,
+            req=req,
+            task_class=x_task_class,
+            priority=x_priority,
+            idempotency_key=idempotency_key,
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
 
     # Try sync fast-path only for interactive
     if x_task_class == TaskClass.interactive and (req.sync_timeout_ms or 0) > 0:

@@ -101,8 +101,16 @@ hooks_install() {
   echo -e "${YELLOW}🔧 安装 Git hooks (.githooks) 并设置执行权限...${NC}"
   local hooks_dir="$ROOT_DIR/.githooks"
   mkdir -p "$hooks_dir"
-  chmod +x "$ROOT_DIR/.githooks/pre-commit" 2>/dev/null || true
-  chmod +x "$ROOT_DIR/.githooks/pre-push" 2>/dev/null || true
+  # 安装工程化 hooks（对齐 cards-api）
+  mkdir -p "$ROOT_DIR/scripts/dev"
+  if [[ -f "$ROOT_DIR/scripts/dev/pre_commit.sh" ]]; then
+    cp "$ROOT_DIR/scripts/dev/pre_commit.sh" "$hooks_dir/pre-commit"
+  fi
+  if [[ -f "$ROOT_DIR/scripts/dev/pre_push.sh" ]]; then
+    cp "$ROOT_DIR/scripts/dev/pre_push.sh" "$hooks_dir/pre-push"
+  fi
+  chmod +x "$hooks_dir/pre-commit" 2>/dev/null || true
+  chmod +x "$hooks_dir/pre-push" 2>/dev/null || true
   git config core.hooksPath .githooks
   echo -e "${GREEN}✅ hooks 安装完成。将自动在 commit/push 时触发。${NC}"
 }
