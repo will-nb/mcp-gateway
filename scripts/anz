@@ -11,6 +11,89 @@ NC='\033[0m'
 
 # 项目根目录
 ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "$(cd "$(dirname "$0")/.." && pwd)")
+ENV_FILE="$ROOT_DIR/.env"
+
+# --- Docker/服务检测 & 测试辅助 ---
+
+check_docker_service() {
+  local service_name="$1"
+  echo -e "${YELLOW}🔎 正在检查 Docker 服务 '$service_name' 是否正在运行...${NC}"
+  if ! docker-compose ps -q "$service_name" | grep -q .; then
+    echo -e "${RED}❌ 错误: Docker 服务 '$service_name' 未运行。${NC}"
+    echo -e "${YELLOW}🤔 请先使用 'docker-compose up -d' 启动所需服务。${NC}"
+    exit 1
+  fi
+  echo -e "${GREEN}✅ 服务 '$service_name' 正在运行。${NC}"
+}
+
+run_unit_tests() {
+  echo -e "\n${GREEN}=============== 运行单元测试 ===============${NC}"
+  check_docker_service "app"
+  echo -e "${YELLOW}🧪 正在容器内运行 pytest tests (无特定目录则运行全量)...${NC}"
+  docker-compose exec -T app pytest tests
+}
+
+run_integration_tests() {
+  echo -e "\n${GREEN}=============== 运行集成测试 ===============${NC}"
+  check_docker_service "app"
+  if docker-compose exec -T app bash -lc 'test -d tests/integration'; then
+    echo -e "${YELLOW}🧪 正在容器内运行 pytest tests/integration...${NC}"
+    docker-compose exec -T app pytest tests/integration
+  else
+    echo -e "${YELLOW}⚠️ 未发现 tests/integration 目录，退回运行全量 tests...${NC}"
+    docker-compose exec -T app pytest tests
+  fi
+}
+
+run_api_tests() {
+  echo -e "\n${GREEN}=============== 运行 API 测试 ===============${NC}"
+  check_docker_service "app"
+  if docker-compose exec -T app bash -lc 'test -d tests/api'; then
+    docker-compose exec -T app pytest tests/api
+  else
+    echo -e "${YELLOW}⚠️ 未发现 tests/api 目录，退回运行全量 tests...${NC}"
+    docker-compose exec -T app pytest tests
+  fi
+}
+
+run_remote_smoke_points() {
+  echo -e "\n${GREEN}=============== 运行远程 API 冒烟测试（按需） ===============${NC}"
+  check_docker_service "app"
+  TARGET_URL=${API_BASE_URL:-http://localhost:8081}
+  echo -e "使用 API_BASE_URL=$TARGET_URL"
+  if docker-compose exec -T app bash -lc 'test -f tests/api/remote/test_points.py'; then
+    docker-compose exec -T app pytest tests/api/remote/test_points.py --api-base-url "$TARGET_URL"
+  else
+    echo -e "${YELLOW}⚠️ 未发现 tests/api/remote/test_points.py，跳过。${NC}"
+  fi
+}
+
+set_middleware_status() {
+  local status="$1"
+  if [[ -f "$ENV_FILE" ]]; then
+    echo -e "${YELLOW}🔧 配置 .env, 设置 RATE_LIMIT_ENABLED=$status...${NC}"
+    sed -i.bak "s/^RATE_LIMIT_ENABLED=.*/RATE_LIMIT_ENABLED=$status/" "$ENV_FILE" || true
+    rm -f "${ENV_FILE}.bak" || true
+  fi
+}
+
+run_middleware_tests() {
+  echo -e "\n${GREEN}=============== 运行中间件行为测试 ===============${NC}"
+  check_docker_service "app"
+  local original_status
+  original_status=$(grep "^RATE_LIMIT_ENABLED=" "$ENV_FILE" 2>/dev/null | cut -d'=' -f2)
+  echo -e "${YELLOW}📝 当前限流状态: ${original_status:-<未设置>} ${NC}"
+  trap 'echo -e "${YELLOW}🧹 恢复限流状态...${NC}"; set_middleware_status "${original_status:-false}"; docker-compose restart app >/dev/null 2>&1 || true; echo -e "${GREEN}✅ 环境已恢复。${NC}"' EXIT
+  echo -e "${YELLOW}🔧 启用限流功能进行测试...${NC}"; set_middleware_status true
+  echo -e "${YELLOW}🔄 重启容器以应用配置...${NC}"; docker-compose down; docker-compose up -d
+  echo -e "${YELLOW}⏳ 等待服务启动...${NC}"; sleep 10
+  if docker-compose exec -T app bash -lc 'pytest -m middleware tests/api'; then
+    echo -e "${GREEN}✅ 中间件测试通过！${NC}"
+  else
+    echo -e "${RED}❌ 中间件测试失败。${NC}"; exit 1
+  fi
+}
+
 
 # --- Git hooks management ---
 
@@ -136,6 +219,14 @@ git_housekeeping() {
 # --- 命令分发 ---
 COMMAND="$1"
 case "$COMMAND" in
+  test:unit)
+    run_unit_tests ;;
+  test:integration)
+    run_integration_tests ;;
+  test:api)
+    run_api_tests ;;
+  test:remote:smoke)
+    run_remote_smoke_points ;;
   git:housekeeping)
     git_housekeeping "$@" ;;
   hooks:install)
@@ -147,6 +238,10 @@ case "$COMMAND" in
   *)
     echo -e "${RED}错误: 未知命令 '$COMMAND'${NC}"
     echo "可用命令:"
+    echo "  test:unit         - 运行最快速的单元测试 (无外部依赖)"
+    echo "  test:integration  - 运行集成测试 (若无目录则运行全量 tests)"
+    echo "  test:api          - 运行 API 相关测试 (若无目录则运行全量 tests)"
+    echo "  test:remote:smoke - 运行远程冒烟（按需），支持 API_BASE_URL 覆盖目标"
     echo "  git:housekeeping   - 清理已被 develop 包含且严格落后的本地分支（支持 --dry-run/-d, --verbose/-v, --show-commands）"
     echo ""
     echo "Git Hooks:"
