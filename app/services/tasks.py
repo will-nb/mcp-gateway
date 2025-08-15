@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Tuple
 from urllib.parse import urlparse
 
-from fastapi import Header
 from pymongo.collection import Collection
 
 from app.core.config import get_settings
@@ -29,7 +28,9 @@ def _jobs_collection() -> Collection:
     return db["jobs"]
 
 
-def _compute_lane(task_class: TaskClass, priority: Optional[TaskPriority]) -> Tuple[str, TaskPriority]:
+def _compute_lane(
+    task_class: TaskClass, priority: Optional[TaskPriority]
+) -> Tuple[str, TaskPriority]:
     # Default mapping by class
     default_priority = {
         TaskClass.interactive: TaskPriority.high,
@@ -46,7 +47,9 @@ def _stream_key(lane: str) -> str:
     return f"{s.redis_key_prefix}:tasks:{lane}"
 
 
-def _idempotent_find(task_type: str, idempotency_key: Optional[str], payload_ref: Optional[str]) -> Optional[Dict[str, Any]]:
+def _idempotent_find(
+    task_type: str, idempotency_key: Optional[str], payload_ref: Optional[str]
+) -> Optional[Dict[str, Any]]:
     if not idempotency_key:
         return None
     col = _jobs_collection()
@@ -156,7 +159,11 @@ def wait_for_completion(job_id: str, timeout_ms: int) -> Optional[Dict[str, Any]
     col = _jobs_collection()
     while time.time() < deadline:
         doc = col.find_one({"id": job_id}, projection={"_id": False})
-        if doc and doc.get("status") in {JobStatus.succeeded, JobStatus.failed, JobStatus.canceled}:
+        if doc and doc.get("status") in {
+            JobStatus.succeeded,
+            JobStatus.failed,
+            JobStatus.canceled,
+        }:
             return doc
         time.sleep(0.05)
     return None
@@ -172,7 +179,7 @@ def _is_callback_allowed(url: str) -> bool:
             return False
         s = get_settings()
         for entry in s.callback_domain_whitelist:
-            if entry.startswith('.'):
+            if entry.startswith("."):
                 # suffix match (e.g., .fly.dev)
                 if host.endswith(entry):
                     return True
@@ -190,5 +197,7 @@ def sign_callback_payload(secret: str, timestamp: str, body_json: str) -> str:
     import hashlib
 
     signing_string = f"{timestamp}.{body_json}".encode("utf-8")
-    digest = hmac.new(secret.encode("utf-8"), signing_string, hashlib.sha256).hexdigest()
+    digest = hmac.new(
+        secret.encode("utf-8"), signing_string, hashlib.sha256
+    ).hexdigest()
     return f"sha256={digest}"

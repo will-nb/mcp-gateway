@@ -6,11 +6,18 @@ from app.services.isbn.client_base import HttpClient, RateLimitError, HttpError
 from app.services.isbn.types import NormalizedBook
 
 
-def fetch_by_isbn(isbn: str, *, wskey: str, access_token: Optional[str] = None, timeout: float = 10.0) -> NormalizedBook:
+def fetch_by_isbn(
+    isbn: str, *, wskey: str, access_token: Optional[str] = None, timeout: float = 10.0
+) -> NormalizedBook:
     # Prefer SRU-like JSON endpoint without OAuth where available
     client = HttpClient(base_url="https://worldcat.org", timeout=timeout)
     headers: Dict[str, str] = {}
-    params: Dict[str, Any] = {"q": f"isbn:{isbn}", "wskey": wskey, "format": "json", "limit": 1}
+    params: Dict[str, Any] = {
+        "q": f"isbn:{isbn}",
+        "wskey": wskey,
+        "format": "json",
+        "limit": 1,
+    }
     if access_token:
         headers["Authorization"] = f"Bearer {access_token}"
     r = client.get("/discovery/bib/search", params=params, headers=headers)

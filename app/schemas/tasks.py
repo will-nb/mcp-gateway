@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.schemas.base import CamelModel
 
@@ -32,8 +32,12 @@ class EnqueueRequest(CamelModel):
     payload_ref: str = Field(..., description="R2 URL 或对象引用，不存入队列")
     params: Dict[str, Any] | None = Field(default=None, description="执行参数")
     batch_id: Optional[str] = Field(default=None, description="批量任务批次 ID")
-    batch_max_parallel: Optional[int] = Field(default=2, ge=1, le=8, description="每批最大并发")
-    sync_timeout_ms: Optional[int] = Field(default=2500, ge=0, le=5000, description="同步快返等待窗口")
+    batch_max_parallel: Optional[int] = Field(
+        default=2, ge=1, le=8, description="每批最大并发"
+    )
+    sync_timeout_ms: Optional[int] = Field(
+        default=2500, ge=0, le=5000, description="同步快返等待窗口"
+    )
     callback_url: Optional[str] = Field(default=None, description="回调地址（可选）")
 
 

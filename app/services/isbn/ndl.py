@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
 
 from app.services.isbn.client_base import HttpClient, RateLimitError, HttpError
 from app.services.isbn.types import NormalizedBook
@@ -9,12 +8,15 @@ from app.services.isbn.types import NormalizedBook
 def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> NormalizedBook:
     # NDL SRU endpoint (XML). Here we call JSON if ever available; otherwise leave raw as placeholder.
     client = HttpClient(base_url="https://ndlsearch.ndl.go.jp", timeout=timeout)
-    r = client.get("/api/sru", params={
-        "operation": "searchRetrieve",
-        "recordSchema": "dcndl",
-        "maximumRecords": 1,
-        "query": f"isbn={isbn}",
-    })
+    r = client.get(
+        "/api/sru",
+        params={
+            "operation": "searchRetrieve",
+            "recordSchema": "dcndl",
+            "maximumRecords": 1,
+            "query": f"isbn={isbn}",
+        },
+    )
     if r.status_code in (403, 429):
         client.close()
         raise RateLimitError("ndl rate limited")

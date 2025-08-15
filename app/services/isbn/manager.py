@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from app.core.config import get_settings
 from app.services.mongo_client import get_database
@@ -9,7 +9,6 @@ from app.services.isbn.factory import fetch_by_isbn as fetch_from_source
 from app.services.isbn.types import NormalizedBook
 from app.services.isbn import (
     SOURCE_LOC,
-    SOURCE_NLC_CHINA,
     SOURCE_NDL,
     SOURCE_KOLISNET,
     SOURCE_BRITISH_LIBRARY,
@@ -36,7 +35,13 @@ COUNTRY_PRIORITY: Dict[str, List[str]] = {
 }
 
 # 通用优先级：免费强 → 免费小 → 收费
-GLOBAL_PRIORITY = [SOURCE_LOC, SOURCE_OPEN_LIBRARY, SOURCE_GOOGLE_BOOKS, SOURCE_WORLDCAT, SOURCE_ISBNDB]
+GLOBAL_PRIORITY = [
+    SOURCE_LOC,
+    SOURCE_OPEN_LIBRARY,
+    SOURCE_GOOGLE_BOOKS,
+    SOURCE_WORLDCAT,
+    SOURCE_ISBNDB,
+]
 
 
 def _infer_country_code_from_isbn(isbn: str) -> Optional[str]:
@@ -94,13 +99,17 @@ def _cache_book(doc: NormalizedBook) -> None:
         isbn = doc.get("identifiers", {}).get("isbn_13") or doc.get("isbn")
         if not isbn:
             return
-        db["books"].update_one({"_id": isbn}, {"$set": {"lastFetched": doc}}, upsert=True)
+        db["books"].update_one(
+            {"_id": isbn}, {"$set": {"lastFetched": doc}}, upsert=True
+        )
     except Exception:
         # Ignore cache errors
         return
 
 
-def resolve_isbn(isbn: str, *, force_source: Optional[str] = None) -> Optional[NormalizedBook]:
+def resolve_isbn(
+    isbn: str, *, force_source: Optional[str] = None
+) -> Optional[NormalizedBook]:
     # 1) 本地 Mongo 查询（简单示例）
     try:
         db = get_database()
@@ -134,26 +143,37 @@ def resolve_isbn(isbn: str, *, force_source: Optional[str] = None) -> Optional[N
             continue
         try:
             if src == SOURCE_GOOGLE_BOOKS:
-                doc = fetch_from_source(src, isbn, api_key=s.google_books_api_key, timeout=DEFAULT_FETCH_TIMEOUT)
+                doc = fetch_from_source(
+                    src,
+                    isbn,
+                    api_key=s.google_books_api_key,
+                    timeout=DEFAULT_FETCH_TIMEOUT,
+                )
             elif src == SOURCE_OPEN_LIBRARY:
                 doc = fetch_from_source(src, isbn, timeout=DEFAULT_FETCH_TIMEOUT)
             elif src == SOURCE_ISBNDB:
                 key = s.isbndb_api_key
                 if not key:
                     continue
-                doc = fetch_from_source(src, isbn, api_key=key, timeout=DEFAULT_FETCH_TIMEOUT)
+                doc = fetch_from_source(
+                    src, isbn, api_key=key, timeout=DEFAULT_FETCH_TIMEOUT
+                )
             elif src == SOURCE_LOC:
                 doc = fetch_from_source(src, isbn, timeout=DEFAULT_FETCH_TIMEOUT)
             elif src == SOURCE_WORLDCAT:
                 key = s.worldcat_wskey
                 if not key:
                     continue
-                doc = fetch_from_source(src, isbn, api_key=key, timeout=DEFAULT_FETCH_TIMEOUT)
+                doc = fetch_from_source(
+                    src, isbn, api_key=key, timeout=DEFAULT_FETCH_TIMEOUT
+                )
             elif src == SOURCE_JUHE_ISBN:
                 key = s.juhe_isbn_api_key
                 if not key:
                     continue
-                doc = fetch_from_source(src, isbn, api_key=key, timeout=DEFAULT_FETCH_TIMEOUT)
+                doc = fetch_from_source(
+                    src, isbn, api_key=key, timeout=DEFAULT_FETCH_TIMEOUT
+                )
             else:
                 # 其他来源暂未实现或需要签约：跳过
                 continue

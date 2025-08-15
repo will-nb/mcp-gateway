@@ -121,12 +121,16 @@ def get_settings() -> AppSettings:
         "QWEN_ALLOWED_MODELS",
         "qwen-plus,qwen3-coder-plus,qwen3-coder-flash,qwen-flash",
     )
-    qwen_allowed_models = [m.strip() for m in qwen_allowed_models_env.split(",") if m.strip()]
+    qwen_allowed_models = [
+        m.strip() for m in qwen_allowed_models_env.split(",") if m.strip()
+    ]
 
     # Semantic cache
     qdrant_cache_collection = os.getenv("QDRANT_CACHE_COLLECTION", "mcp_chat_cache")
     qdrant_cache_vector_dim = int(os.getenv("QDRANT_CACHE_VECTOR_DIM", "256"))
-    qdrant_cache_score_threshold = float(os.getenv("QDRANT_CACHE_SCORE_THRESHOLD", "0.92"))
+    qdrant_cache_score_threshold = float(
+        os.getenv("QDRANT_CACHE_SCORE_THRESHOLD", "0.92")
+    )
 
     # Interactive sync default (global)
     interactive_sync_timeout_ms = int(os.getenv("INTERACTIVE_SYNC_TIMEOUT_MS", "2500"))
@@ -136,17 +140,22 @@ def get_settings() -> AppSettings:
     # Comma-separated hosts or suffix patterns ('.fly.dev' means any subdomain)
     callback_domain_whitelist_env = os.getenv(
         "CALLBACK_DOMAIN_WHITELIST",
-        ",".join([
-            "localhost",
-            "127.0.0.1",
-            "host.docker.internal",
-            ".fly.dev",
-        ]),
+        ",".join(
+            [
+                "localhost",
+                "127.0.0.1",
+                "host.docker.internal",
+                ".fly.dev",
+            ]
+        ),
     )
-    callback_domain_whitelist = [h.strip() for h in callback_domain_whitelist_env.split(",") if h.strip()]
+    callback_domain_whitelist = [
+        h.strip() for h in callback_domain_whitelist_env.split(",") if h.strip()
+    ]
 
     # Provider limits/budgets (JSON; fallback to permissive defaults)
     import json
+
     provider_limits_default = {
         "google_books": {"qps": 10, "burst": 20},
         "open_library": {"qps": 5, "burst": 10},
@@ -160,11 +169,15 @@ def get_settings() -> AppSettings:
         "isbndb": {"daily_requests": 1_000_000},
     }
     try:
-        provider_limits = json.loads(os.getenv("PROVIDER_LIMITS", "")) or provider_limits_default
+        provider_limits = (
+            json.loads(os.getenv("PROVIDER_LIMITS", "")) or provider_limits_default
+        )
     except Exception:
         provider_limits = provider_limits_default
     try:
-        provider_budgets = json.loads(os.getenv("PROVIDER_BUDGETS", "")) or provider_budgets_default
+        provider_budgets = (
+            json.loads(os.getenv("PROVIDER_BUDGETS", "")) or provider_budgets_default
+        )
     except Exception:
         provider_budgets = provider_budgets_default
 
@@ -172,7 +185,9 @@ def get_settings() -> AppSettings:
         allowed_origins = ["*"]
     else:
         allowed_origins = [
-            origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()
+            origin.strip()
+            for origin in allowed_origins_env.split(",")
+            if origin.strip()
         ]
 
     return AppSettings(

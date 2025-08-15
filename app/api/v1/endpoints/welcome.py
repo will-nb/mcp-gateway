@@ -12,7 +12,7 @@ from app.schemas.welcome import HealthResponse, ServiceStatus
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/welcome", tags=["Welcome"]) 
+router = APIRouter(prefix="/welcome", tags=["Welcome"])
 
 
 @router.get("/health", response_model=ApiStandardResponse)
@@ -30,12 +30,19 @@ async def health():
     }
 
     data = HealthResponse(
-        status="healthy" if all(v.status == "healthy" for v in services.values()) else "unhealthy",
+        status="healthy"
+        if all(v.status == "healthy" for v in services.values())
+        else "unhealthy",
         version=s.version if hasattr(s, "version") else "1.0.0",
         timestamp=datetime.now(UTC).isoformat(),
         services=services,
     )
-    return create_object_response(message="健康检查成功", data_value=data.model_dump(by_alias=True), data_type="health", code=200)
+    return create_object_response(
+        message="健康检查成功",
+        data_value=data.model_dump(by_alias=True),
+        data_type="health",
+        code=200,
+    )
 
 
 @router.get("/info", response_model=ApiStandardResponse)
@@ -45,4 +52,6 @@ async def info():
         "version": s.version if hasattr(s, "version") else "1.0.0",
         "environment": "development",
     }
-    return create_object_response(message="应用信息", data_value=data, data_type="info", code=200)
+    return create_object_response(
+        message="应用信息", data_value=data, data_type="info", code=200
+    )

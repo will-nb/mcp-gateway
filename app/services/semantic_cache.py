@@ -16,7 +16,9 @@ class SemanticCache:
         self.enabled = True
         try:
             self.q = get_qdrant_service()
-            self.q.ensure_collection(self.s.qdrant_cache_collection, self.s.qdrant_cache_vector_dim)
+            self.q.ensure_collection(
+                self.s.qdrant_cache_collection, self.s.qdrant_cache_vector_dim
+            )
         except Exception:
             # Qdrant not available; disable cache gracefully
             self.enabled = False

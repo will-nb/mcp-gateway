@@ -13,16 +13,28 @@ class PublicSettings(BaseModel):
     version: str = Field(default_factory=lambda: get_settings().version)
     # Qdrant
     qdrant_host: str = Field(default_factory=lambda: get_settings().qdrant_host)
-    qdrant_http_port: int = Field(default_factory=lambda: get_settings().qdrant_http_port)
-    qdrant_grpc_port: int = Field(default_factory=lambda: get_settings().qdrant_grpc_port)
-    qdrant_prefer_grpc: bool = Field(default_factory=lambda: get_settings().qdrant_prefer_grpc)
-    qdrant_default_collection: str = Field(default_factory=lambda: get_settings().qdrant_default_collection)
-    qdrant_vector_dim: int = Field(default_factory=lambda: get_settings().qdrant_vector_dim)
+    qdrant_http_port: int = Field(
+        default_factory=lambda: get_settings().qdrant_http_port
+    )
+    qdrant_grpc_port: int = Field(
+        default_factory=lambda: get_settings().qdrant_grpc_port
+    )
+    qdrant_prefer_grpc: bool = Field(
+        default_factory=lambda: get_settings().qdrant_prefer_grpc
+    )
+    qdrant_default_collection: str = Field(
+        default_factory=lambda: get_settings().qdrant_default_collection
+    )
+    qdrant_vector_dim: int = Field(
+        default_factory=lambda: get_settings().qdrant_vector_dim
+    )
     # Redis (non-sensitive)
     redis_host: str = Field(default_factory=lambda: get_settings().redis_host)
     redis_port: int = Field(default_factory=lambda: get_settings().redis_port)
     redis_db: int = Field(default_factory=lambda: get_settings().redis_db)
-    redis_key_prefix: str = Field(default_factory=lambda: get_settings().redis_key_prefix)
+    redis_key_prefix: str = Field(
+        default_factory=lambda: get_settings().redis_key_prefix
+    )
 
 
 @router.get("/settings", response_model=ApiStandardResponse, summary="Public settings")

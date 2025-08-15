@@ -17,9 +17,16 @@ def test_health_ok(monkeypatch):
     # Patch mongo health to avoid real connection
     async def fake_mongo_health():
         return {"status": "healthy", "message": "ok"}
+
     monkeypatch.setattr("app.core.mongo_async.get_mongo_health", fake_mongo_health)
-    monkeypatch.setattr("qdrant_client.QdrantClient.get_collections", fake_qdrant_get_collections, raising=False)
-    monkeypatch.setattr("app.services.redis_client.get_redis_service", lambda: FakeRedisService())
+    monkeypatch.setattr(
+        "qdrant_client.QdrantClient.get_collections",
+        fake_qdrant_get_collections,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "app.services.redis_client.get_redis_service", lambda: FakeRedisService()
+    )
 
     client = TestClient(app)
     res = client.get("/api/v1/welcome/health").json()
@@ -40,9 +47,16 @@ def test_health_qdrant_down(monkeypatch):
 
     async def fake_mongo_health2():
         return {"status": "healthy", "message": "ok"}
+
     monkeypatch.setattr("app.core.mongo_async.get_mongo_health", fake_mongo_health2)
-    monkeypatch.setattr("qdrant_client.QdrantClient.get_collections", fake_qdrant_get_collections, raising=False)
-    monkeypatch.setattr("app.services.redis_client.get_redis_service", lambda: FakeRedisService())
+    monkeypatch.setattr(
+        "qdrant_client.QdrantClient.get_collections",
+        fake_qdrant_get_collections,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "app.services.redis_client.get_redis_service", lambda: FakeRedisService()
+    )
 
     client = TestClient(app)
     res = client.get("/api/v1/welcome/health").json()
@@ -61,9 +75,16 @@ def test_health_redis_down(monkeypatch):
 
     async def fake_mongo_health3():
         return {"status": "healthy", "message": "ok"}
+
     monkeypatch.setattr("app.core.mongo_async.get_mongo_health", fake_mongo_health3)
-    monkeypatch.setattr("qdrant_client.QdrantClient.get_collections", fake_qdrant_get_collections, raising=False)
-    monkeypatch.setattr("app.services.redis_client.get_redis_service", lambda: FakeRedisService())
+    monkeypatch.setattr(
+        "qdrant_client.QdrantClient.get_collections",
+        fake_qdrant_get_collections,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "app.services.redis_client.get_redis_service", lambda: FakeRedisService()
+    )
 
     client = TestClient(app)
     res = client.get("/api/v1/welcome/health").json()

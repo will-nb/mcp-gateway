@@ -2,11 +2,22 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from app.services.isbn.client_base import HttpClient, RateLimitError, HttpError, filter_alive_urls
+from app.services.isbn.client_base import (
+    HttpClient,
+    RateLimitError,
+    HttpError,
+    filter_alive_urls,
+)
 from app.services.isbn.types import NormalizedBook
 
 
-def fetch_by_isbn(isbn: str, *, api_key: Optional[str] = None, lang: Optional[str] = None, timeout: float = 10.0) -> NormalizedBook:
+def fetch_by_isbn(
+    isbn: str,
+    *,
+    api_key: Optional[str] = None,
+    lang: Optional[str] = None,
+    timeout: float = 10.0,
+) -> NormalizedBook:
     client = HttpClient(base_url="https://www.googleapis.com/books/v1", timeout=timeout)
     params: Dict[str, Any] = {"q": f"isbn:{isbn}", "maxResults": 1}
     if api_key:
@@ -46,7 +57,9 @@ def fetch_by_isbn(isbn: str, *, api_key: Optional[str] = None, lang: Optional[st
         vi = items[0].get("volumeInfo", {})
         book["title"] = vi.get("title")
         book["subtitle"] = vi.get("subtitle")
-        book["creators"] = [{"name": a, "role": None} for a in (vi.get("authors") or [])]
+        book["creators"] = [
+            {"name": a, "role": None} for a in (vi.get("authors") or [])
+        ]
         book["publisher"] = vi.get("publisher")
         book["published_date"] = vi.get("publishedDate")
         book["language"] = vi.get("language")
@@ -89,7 +102,14 @@ def fetch_by_isbn(isbn: str, *, api_key: Optional[str] = None, lang: Optional[st
     return book
 
 
-def search_by_title(title: str, *, api_key: Optional[str] = None, lang: Optional[str] = None, max_results: int = 5, timeout: float = 10.0) -> List[NormalizedBook]:
+def search_by_title(
+    title: str,
+    *,
+    api_key: Optional[str] = None,
+    lang: Optional[str] = None,
+    max_results: int = 5,
+    timeout: float = 10.0,
+) -> List[NormalizedBook]:
     client = HttpClient(base_url="https://www.googleapis.com/books/v1", timeout=timeout)
     params: Dict[str, Any] = {"q": f"intitle:{title}", "maxResults": max_results}
     if api_key:
@@ -110,7 +130,17 @@ def search_by_title(title: str, *, api_key: Optional[str] = None, lang: Optional
         vi = it.get("volumeInfo", {})
         nb: NormalizedBook = {
             "source": "google_books",
-            "isbn": (next((i.get("identifier") for i in (vi.get("industryIdentifiers") or []) if i.get("type") == "ISBN_13"), None) or ""),
+            "isbn": (
+                next(
+                    (
+                        i.get("identifier")
+                        for i in (vi.get("industryIdentifiers") or [])
+                        if i.get("type") == "ISBN_13"
+                    ),
+                    None,
+                )
+                or ""
+            ),
             "title": vi.get("title"),
             "subtitle": vi.get("subtitle"),
             "creators": [{"name": a, "role": None} for a in (vi.get("authors") or [])],
@@ -122,7 +152,9 @@ def search_by_title(title: str, *, api_key: Optional[str] = None, lang: Optional
             "page_count": vi.get("pageCount"),
             "identifiers": {},
             "cover": vi.get("imageLinks") or {},
-            "preview_urls": [u for u in [vi.get("previewLink"), vi.get("infoLink")] if u],
+            "preview_urls": [
+                u for u in [vi.get("previewLink"), vi.get("infoLink")] if u
+            ],
             "access_urls": [],
             "raw": it,
         }

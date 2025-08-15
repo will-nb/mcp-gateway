@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import Any, Dict
 
 from app.services.isbn.client_base import HttpClient, RateLimitError, HttpError
 from app.services.isbn.types import NormalizedBook
@@ -9,13 +8,16 @@ from app.services.isbn.types import NormalizedBook
 def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> NormalizedBook:
     # British Library SRU (XML)
     client = HttpClient(base_url="https://sru.bl.uk", timeout=timeout)
-    r = client.get("/SRU", params={
-        "operation": "searchRetrieve",
-        "version": "1.2",
-        "query": f"isbn=\"{isbn}\"",
-        "maximumRecords": 1,
-        "recordSchema": "mods",
-    })
+    r = client.get(
+        "/SRU",
+        params={
+            "operation": "searchRetrieve",
+            "version": "1.2",
+            "query": f'isbn="{isbn}"',
+            "maximumRecords": 1,
+            "recordSchema": "mods",
+        },
+    )
     if r.status_code in (403, 429):
         client.close()
         raise RateLimitError("british_library rate limited")

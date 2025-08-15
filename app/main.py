@@ -2,12 +2,14 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.core.config import get_settings
-from app.api.v1.api import api_router
-from app.core.exceptions import http_422_handler, http_error_handler, http_500_handler
 from fastapi.exceptions import RequestValidationError
+from fastapi.openapi.utils import get_openapi
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.api.v1.api import api_router
+from app.core.config import get_settings
+from app.core.exceptions import http_422_handler, http_error_handler, http_500_handler
+from app.schemas.response import EmptyPayload, SuccessResponse
 
 
 settings = get_settings()
@@ -17,8 +19,8 @@ app = FastAPI(
     version=settings.version,
 )
 
-# Force OpenAPI 3.0.3 schema
-from fastapi.openapi.utils import get_openapi
+"""Force OpenAPI 3.0.3 schema."""
+
 
 def custom_openapi():
     if app.openapi_schema:
@@ -32,6 +34,7 @@ def custom_openapi():
     )
     app.openapi_schema = openapi_schema
     return app.openapi_schema
+
 
 app.openapi = custom_openapi
 
@@ -53,7 +56,6 @@ app.add_middleware(
 
 
 # Root endpoint (simple liveness)
-from app.schemas.response import SuccessResponse, EmptyPayload
 
 
 @app.get("/", response_model=SuccessResponse[EmptyPayload])

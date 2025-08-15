@@ -18,8 +18,11 @@ class RedisService:
         self._prefix = key_prefix
         # Lazy import to avoid hard dependency during tests unless used
         import importlib
+
         redis_mod: Any = importlib.import_module("redis")
-        self._client = redis_mod.Redis(host=host, port=port, db=db, password=password, decode_responses=True)
+        self._client = redis_mod.Redis(
+            host=host, port=port, db=db, password=password, decode_responses=True
+        )
 
     def prefixed(self, key: str) -> str:
         return f"{self._prefix}:{key}" if self._prefix else key

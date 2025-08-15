@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from app.core.config import get_settings
 from app.schemas.common import ApiStandardResponse, create_object_response, DataType
 from app.schemas.tasks import (
-    EnqueueAccepted,
     EnqueueRequest,
     JobStatus,
     TaskClass,
@@ -36,7 +35,9 @@ async def _handle_enqueue(
     *,
     task_type: str,
     req: EnqueueRequest,
-    x_task_class: TaskClass = Header(default=TaskClass.interactive, alias="X-Task-Class"),
+    x_task_class: TaskClass = Header(
+        default=TaskClass.interactive, alias="X-Task-Class"
+    ),
     x_priority: Optional[TaskPriority] = Header(default=None, alias="X-Priority"),
     idempotency_key: Optional[str] = Header(default=None, alias="Idempotency-Key"),
 ) -> ApiStandardResponse:
@@ -72,14 +73,20 @@ async def _handle_enqueue(
                 code=200,
             )
 
-    data = EnqueueResponseData(job_id=job_id, status_url=_status_url(job_id), poll_after=2, status="queued").model_dump()
-    return create_object_response(message="Accepted", data_value=data, data_type=DataType.OBJECT, code=202)
+    data = EnqueueResponseData(
+        job_id=job_id, status_url=_status_url(job_id), poll_after=2, status="queued"
+    ).model_dump()
+    return create_object_response(
+        message="Accepted", data_value=data, data_type=DataType.OBJECT, code=202
+    )
 
 
 @router.post("/ocr", response_model=ApiStandardResponse, summary="Enqueue OCR task")
 async def enqueue_ocr(
     req: EnqueueRequest,
-    x_task_class: TaskClass = Header(default=TaskClass.interactive, alias="X-Task-Class"),
+    x_task_class: TaskClass = Header(
+        default=TaskClass.interactive, alias="X-Task-Class"
+    ),
     x_priority: Optional[TaskPriority] = Header(default=None, alias="X-Priority"),
     idempotency_key: Optional[str] = Header(default=None, alias="Idempotency-Key"),
 ) -> ApiStandardResponse:
@@ -92,10 +99,14 @@ async def enqueue_ocr(
     )
 
 
-@router.post("/ai", response_model=ApiStandardResponse, summary="Enqueue AI bridge task")
+@router.post(
+    "/ai", response_model=ApiStandardResponse, summary="Enqueue AI bridge task"
+)
 async def enqueue_ai(
     req: EnqueueRequest,
-    x_task_class: TaskClass = Header(default=TaskClass.interactive, alias="X-Task-Class"),
+    x_task_class: TaskClass = Header(
+        default=TaskClass.interactive, alias="X-Task-Class"
+    ),
     x_priority: Optional[TaskPriority] = Header(default=None, alias="X-Priority"),
     idempotency_key: Optional[str] = Header(default=None, alias="Idempotency-Key"),
 ) -> ApiStandardResponse:
@@ -108,10 +119,14 @@ async def enqueue_ai(
     )
 
 
-@router.post("/isbn", response_model=ApiStandardResponse, summary="Enqueue ISBN lookup task")
+@router.post(
+    "/isbn", response_model=ApiStandardResponse, summary="Enqueue ISBN lookup task"
+)
 async def enqueue_isbn(
     req: EnqueueRequest,
-    x_task_class: TaskClass = Header(default=TaskClass.interactive, alias="X-Task-Class"),
+    x_task_class: TaskClass = Header(
+        default=TaskClass.interactive, alias="X-Task-Class"
+    ),
     x_priority: Optional[TaskPriority] = Header(default=None, alias="X-Priority"),
     idempotency_key: Optional[str] = Header(default=None, alias="Idempotency-Key"),
 ) -> ApiStandardResponse:
@@ -129,12 +144,21 @@ async def get_task_status(job_id: str) -> ApiStandardResponse:
     doc = get_job(job_id)
     if not doc:
         raise HTTPException(status_code=404, detail="job not found")
-    return create_object_response(message="OK", data_value=doc, data_type=DataType.OBJECT, code=200)
+    return create_object_response(
+        message="OK", data_value=doc, data_type=DataType.OBJECT, code=200
+    )
 
 
-@router.delete("/{job_id}", response_model=ApiStandardResponse, summary="Cancel queued job")
+@router.delete(
+    "/{job_id}", response_model=ApiStandardResponse, summary="Cancel queued job"
+)
 async def cancel_task(job_id: str) -> ApiStandardResponse:
     ok = cancel_job(job_id)
     if not ok:
         raise HTTPException(status_code=409, detail="cannot cancel in current state")
-    return create_object_response(message="Canceled", data_value={"jobId": job_id}, data_type=DataType.OBJECT, code=200)
+    return create_object_response(
+        message="Canceled",
+        data_value={"jobId": job_id},
+        data_type=DataType.OBJECT,
+        code=200,
+    )

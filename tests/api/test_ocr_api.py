@@ -25,11 +25,15 @@ def test_ocr_isbn_ok_path(monkeypatch):
     client = TestClient(app)
 
     # Force OCR/barcode to deterministic outputs
-    monkeypatch.setattr("app.api.v1.endpoints.ocr.decode_isbn_from_image_bytes", lambda b: ["9780134685991"]) 
+    monkeypatch.setattr(
+        "app.api.v1.endpoints.ocr.decode_isbn_from_image_bytes",
+        lambda b: ["9780134685991"],
+    )
 
     class FakeOCR:
         def image_bytes_to_texts(self, content: bytes):
             return [("plain", "ISBN 9780134685991")]
+
         def image_bytes_to_lines(self, content: bytes):
             return ["Effective Java ISBN 9780134685991"]
 

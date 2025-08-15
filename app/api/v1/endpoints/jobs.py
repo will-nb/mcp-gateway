@@ -14,12 +14,21 @@ async def get_job_status(job_id: str) -> ApiStandardResponse:
     doc = get_job(job_id)
     if not doc:
         raise HTTPException(status_code=404, detail="job not found")
-    return create_object_response(message="OK", data_value=doc, data_type=DataType.OBJECT, code=200)
+    return create_object_response(
+        message="OK", data_value=doc, data_type=DataType.OBJECT, code=200
+    )
 
 
-@router.delete("/{job_id}", response_model=ApiStandardResponse, summary="Cancel queued job")
+@router.delete(
+    "/{job_id}", response_model=ApiStandardResponse, summary="Cancel queued job"
+)
 async def cancel_job_status(job_id: str) -> ApiStandardResponse:
     ok = cancel_job(job_id)
     if not ok:
         raise HTTPException(status_code=409, detail="cannot cancel in current state")
-    return create_object_response(message="Canceled", data_value={"jobId": job_id}, data_type=DataType.OBJECT, code=200)
+    return create_object_response(
+        message="Canceled",
+        data_value={"jobId": job_id},
+        data_type=DataType.OBJECT,
+        code=200,
+    )

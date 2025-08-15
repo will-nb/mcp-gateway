@@ -18,7 +18,13 @@ class HttpClient:
             return f"{self.base_url}{path if path.startswith('/') else '/' + path}"
         return path
 
-    def get(self, path: str, *, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None) -> httpx.Response:
+    def get(
+        self,
+        path: str,
+        *,
+        params: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> httpx.Response:
         url = self._url(path)
         return self._client.get(url, params=params, headers=headers)
 

@@ -11,7 +11,10 @@ class QdrantHealth(BaseModel):
 
 class MongoHealth(BaseModel):
     reachable: bool = Field(default=True, json_schema_extra={"example": True})
-    uri: str = Field(default="mongodb://localhost:27017", json_schema_extra={"example": "mongodb://localhost:27017"})
+    uri: str = Field(
+        default="mongodb://localhost:27017",
+        json_schema_extra={"example": "mongodb://localhost:27017"},
+    )
     db: str = Field(default="mcp_gateway", json_schema_extra={"example": "mcp_gateway"})
 
 

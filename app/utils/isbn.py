@@ -3,8 +3,12 @@ from __future__ import annotations
 import re
 from typing import List, Tuple, Optional
 
-ISBN10_REGEX = re.compile(r"\b(?:ISBN(?:-10)?:?\s*)?([0-9]{1,5}[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9Xx])\b")
-ISBN13_REGEX = re.compile(r"\b(?:ISBN(?:-13)?:?\s*)?((?:978|979)[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9])\b")
+ISBN10_REGEX = re.compile(
+    r"\b(?:ISBN(?:-10)?:?\s*)?([0-9]{1,5}[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9Xx])\b"
+)
+ISBN13_REGEX = re.compile(
+    r"\b(?:ISBN(?:-13)?:?\s*)?((?:978|979)[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9])\b"
+)
 
 
 def _clean_isbn(raw: str) -> str:
@@ -21,7 +25,7 @@ def is_valid_isbn10(isbn: str) -> bool:
             return False
         total += i * int(ch)
     check = s[9]
-    if check == 'X':
+    if check == "X":
         total += 10 * 10
     elif check.isdigit():
         total += 10 * int(check)
@@ -42,13 +46,21 @@ def is_valid_isbn13(isbn: str) -> bool:
     return check == int(s[12])
 
 
-_OCR_CONFUSION_MAP = str.maketrans({
-    'O': '0', 'o': '0',
-    'I': '1', 'i': '1', 'l': '1', 'L': '1',
-    'S': '5', 's': '5',
-    'B': '8',
-    'Z': '2', 'z': '2',
-})
+_OCR_CONFUSION_MAP = str.maketrans(
+    {
+        "O": "0",
+        "o": "0",
+        "I": "1",
+        "i": "1",
+        "l": "1",
+        "L": "1",
+        "S": "5",
+        "s": "5",
+        "B": "8",
+        "Z": "2",
+        "z": "2",
+    }
+)
 
 
 def _correction_variants(s: str) -> List[str]:

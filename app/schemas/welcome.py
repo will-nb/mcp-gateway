@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Dict
 
 from pydantic import Field
@@ -14,5 +13,7 @@ class ServiceStatus(CamelModel):
 class HealthResponse(CamelModel):
     status: str = Field(..., description="整体状态")
     version: str = Field(..., description="版本信息")
-    timestamp: str = Field(..., description="时间戳", json_schema_extra={"format": "date-time"})
+    timestamp: str = Field(
+        ..., description="时间戳", json_schema_extra={"format": "date-time"}
+    )
     services: Dict[str, ServiceStatus] = Field(..., description="各服务状态")

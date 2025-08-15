@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from pydantic import BaseModel, Field
@@ -15,8 +15,13 @@ router = APIRouter()
 
 
 class OCRISBNResponse(BaseModel):
-    text_samples: List[str] = Field(default_factory=list, description="多种预处理下的 OCR 文本候选（去重后展示部分）")
-    isbns: List[str] = Field(default_factory=list, description="识别出的 ISBN（去重、格式化后）")
+    text_samples: List[str] = Field(
+        default_factory=list,
+        description="多种预处理下的 OCR 文本候选（去重后展示部分）",
+    )
+    isbns: List[str] = Field(
+        default_factory=list, description="识别出的 ISBN（去重、格式化后）"
+    )
 
 
 @router.post(
@@ -28,7 +33,9 @@ class OCRISBNResponse(BaseModel):
         "从文本中提取并校验 ISBN-10 / ISBN-13。适配不同角度、尺寸和光照。"
     ),
 )
-async def ocr_isbn(file: UploadFile = File(..., description="图片文件，如 jpg/png/jpeg")) -> ApiStandardResponse:
+async def ocr_isbn(
+    file: UploadFile = File(..., description="图片文件，如 jpg/png/jpeg"),
+) -> ApiStandardResponse:
     if file.content_type not in {"image/png", "image/jpeg", "image/jpg"}:
         raise HTTPException(status_code=400, detail="仅支持 PNG/JPEG 图片")
 
@@ -70,6 +77,11 @@ async def ocr_isbn(file: UploadFile = File(..., description="图片文件，如 
                 found.append(n)
 
     if not found:
-        raise HTTPException(status_code=422, detail="未能从图片中识别出有效的 ISBN。请尝试更清晰的条形码或封面照片。")
+        raise HTTPException(
+            status_code=422,
+            detail="未能从图片中识别出有效的 ISBN。请尝试更清晰的条形码或封面照片。",
+        )
     payload = OCRISBNResponse(text_samples=samples, isbns=found).model_dump()
-    return create_object_response(message="OK", data_value=payload, data_type=DataType.OBJECT, code=200)
+    return create_object_response(
+        message="OK", data_value=payload, data_type=DataType.OBJECT, code=200
+    )

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import Any, Dict
 
 from app.services.isbn.types import NormalizedBook
 

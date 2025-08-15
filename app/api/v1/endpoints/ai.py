@@ -5,8 +5,6 @@ from pydantic import BaseModel, Field
 
 from app.core.config import get_settings
 from app.schemas.common import ApiStandardResponse, create_object_response, DataType
-from app.services.qwen_client import get_qwen_client
-from app.services.semantic_cache import get_semantic_cache
 from app.schemas.tasks import EnqueueRequest, TaskClass, TaskPriority, JobStatus
 from app.services.tasks import enqueue_task, wait_for_completion
 
@@ -39,7 +37,9 @@ class ChatResponse(BaseModel):
 )
 def chat(
     req: ChatRequest,
-    x_task_class: TaskClass = Header(default=TaskClass.interactive, alias="X-Task-Class"),
+    x_task_class: TaskClass = Header(
+        default=TaskClass.interactive, alias="X-Task-Class"
+    ),
     x_priority: TaskPriority | None = Header(default=None, alias="X-Priority"),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> ApiStandardResponse:
@@ -48,7 +48,7 @@ def chat(
         raise HTTPException(status_code=400, detail=f"Model {req.model} not allowed")
 
     # 入队（payload_ref 用 inline 标记；params 传原请求体）
-    task_req = EnqueueRequest(payload_ref=f"inline://ai_chat", params=req.model_dump())
+    task_req = EnqueueRequest(payload_ref="inline://ai_chat", params=req.model_dump())
     job_id, _ = enqueue_task(
         task_type="ai_chat",
         req=task_req,

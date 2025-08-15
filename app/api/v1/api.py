@@ -10,10 +10,10 @@ api_router = APIRouter()
 
 # Health and liveness endpoints
 api_router.include_router(settings.router, tags=["settings"])
-api_router.include_router(qdrant.router, tags=["qdrant"]) 
+api_router.include_router(qdrant.router, tags=["qdrant"])
 api_router.include_router(ai.router, tags=["ai"])
-api_router.include_router(ocr.router, tags=["ocr"]) 
-api_router.include_router(book_search.router, tags=["books"]) 
+api_router.include_router(ocr.router, tags=["ocr"])
+api_router.include_router(book_search.router, tags=["books"])
 api_router.include_router(welcome.router, tags=["Welcome"])
 api_router.include_router(tasks.router, tags=["tasks"])  # mounted at /api/v1/tasks
 api_router.include_router(jobs.router, tags=["jobs"])  # mounted at /api/v1/jobs

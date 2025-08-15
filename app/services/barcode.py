@@ -15,6 +15,7 @@ def decode_isbn_from_image_bytes(content: bytes) -> List[str]:
     """
     try:
         import importlib
+
         pyzbar = importlib.import_module("pyzbar.pyzbar")  # type: ignore
     except Exception:
         return []
@@ -26,7 +27,11 @@ def decode_isbn_from_image_bytes(content: bytes) -> List[str]:
         data = obj.data.decode("utf-8", errors="ignore").strip()
         # Many ISBN barcodes are EAN-13 and begin with 978/979
         digits = "".join(ch for ch in data if ch.isdigit())
-        if len(digits) == 13 and digits.startswith(("978", "979")) and is_valid_isbn13(digits):
+        if (
+            len(digits) == 13
+            and digits.startswith(("978", "979"))
+            and is_valid_isbn13(digits)
+        ):
             if digits not in seen:
                 seen.add(digits)
                 results.append(digits)

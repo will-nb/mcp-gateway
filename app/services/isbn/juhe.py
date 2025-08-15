@@ -1,8 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
-from app.services.isbn.client_base import HttpClient, RateLimitError, HttpError, filter_alive_urls
+from app.services.isbn.client_base import (
+    HttpClient,
+    RateLimitError,
+    HttpError,
+    filter_alive_urls,
+)
 from app.services.isbn.types import NormalizedBook
 
 
@@ -70,7 +75,9 @@ def fetch_by_isbn(isbn: str, *, api_key: str, timeout: float = 10.0) -> Normaliz
         val = payload.get(key)
         if isinstance(val, str) and val.startswith("http"):
             preview_candidates.append(val)
-    access_urls = filter_alive_urls(preview_candidates, timeout=5.0) if preview_candidates else []
+    access_urls = (
+        filter_alive_urls(preview_candidates, timeout=5.0) if preview_candidates else []
+    )
 
     book: NormalizedBook = {
         "source": "juhe_isbn",

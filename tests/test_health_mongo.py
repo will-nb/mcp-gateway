@@ -18,9 +18,17 @@ def test_health_mongo_ok(monkeypatch):
         def server_info(self):
             return {"ok": 1}
 
-    monkeypatch.setattr("qdrant_client.QdrantClient.get_collections", fake_qdrant_get_collections, raising=False)
-    monkeypatch.setattr("app.services.redis_client.get_redis_service", lambda: FakeRedisService())
-    monkeypatch.setattr("app.services.mongo_client.get_mongo_client", lambda: FakeMongoClient())
+    monkeypatch.setattr(
+        "qdrant_client.QdrantClient.get_collections",
+        fake_qdrant_get_collections,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "app.services.redis_client.get_redis_service", lambda: FakeRedisService()
+    )
+    monkeypatch.setattr(
+        "app.services.mongo_client.get_mongo_client", lambda: FakeMongoClient()
+    )
 
     client = TestClient(app)
     res = client.get("/api/v1/welcome/health").json()
@@ -41,9 +49,17 @@ def test_health_mongo_down(monkeypatch):
         def server_info(self):
             raise RuntimeError("down")
 
-    monkeypatch.setattr("qdrant_client.QdrantClient.get_collections", fake_qdrant_get_collections, raising=False)
-    monkeypatch.setattr("app.services.redis_client.get_redis_service", lambda: FakeRedisService())
-    monkeypatch.setattr("app.services.mongo_client.get_mongo_client", lambda: FakeMongoClient())
+    monkeypatch.setattr(
+        "qdrant_client.QdrantClient.get_collections",
+        fake_qdrant_get_collections,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "app.services.redis_client.get_redis_service", lambda: FakeRedisService()
+    )
+    monkeypatch.setattr(
+        "app.services.mongo_client.get_mongo_client", lambda: FakeMongoClient()
+    )
 
     client = TestClient(app)
     res = client.get("/api/v1/welcome/health").json()

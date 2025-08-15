@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import List
 
 from app.services.isbn.client_base import HttpClient, HttpError
 from app.services.isbn.types import NormalizedBook
@@ -9,7 +9,10 @@ from app.services.isbn.types import NormalizedBook
 def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> NormalizedBook:
     client = HttpClient(base_url="https://openlibrary.org", timeout=timeout)
     # Try data API first
-    r = client.get("/api/books", params={"bibkeys": f"ISBN:{isbn}", "format": "json", "jscmd": "data"})
+    r = client.get(
+        "/api/books",
+        params={"bibkeys": f"ISBN:{isbn}", "format": "json", "jscmd": "data"},
+    )
     if r.status_code >= 400:
         client.close()
         raise HttpError(r.status_code, r.text)
@@ -21,12 +24,21 @@ def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> NormalizedBook:
         "isbn": isbn,
         "title": payload.get("title"),
         "subtitle": payload.get("subtitle"),
-        "creators": [{"name": a.get("name"), "role": None} for a in (payload.get("authors") or [])],
-        "publisher": (payload.get("publishers") or [{}])[0].get("name") if payload.get("publishers") else None,
+        "creators": [
+            {"name": a.get("name"), "role": None}
+            for a in (payload.get("authors") or [])
+        ],
+        "publisher": (payload.get("publishers") or [{}])[0].get("name")
+        if payload.get("publishers")
+        else None,
         "published_date": payload.get("publish_date"),
         "language": None,
-        "subjects": [s.get("name") for s in (payload.get("subjects") or []) if s.get("name")],
-        "description": payload.get("description") if isinstance(payload.get("description"), str) else None,
+        "subjects": [
+            s.get("name") for s in (payload.get("subjects") or []) if s.get("name")
+        ],
+        "description": payload.get("description")
+        if isinstance(payload.get("description"), str)
+        else None,
         "page_count": payload.get("number_of_pages"),
         "identifiers": {},
         "cover": payload.get("cover") or {},
@@ -55,12 +67,15 @@ def fetch_by_isbn(isbn: str, *, timeout: float = 10.0) -> NormalizedBook:
                     candidates.append(href)
     if candidates:
         from app.services.isbn.client_base import filter_alive_urls
+
         book["access_urls"] = filter_alive_urls(candidates, timeout=5.0)
     client.close()
     return book
 
 
-def search_by_title(title: str, *, max_results: int = 5, timeout: float = 10.0) -> List[NormalizedBook]:
+def search_by_title(
+    title: str, *, max_results: int = 5, timeout: float = 10.0
+) -> List[NormalizedBook]:
     # Open Library search API
     client = HttpClient(base_url="https://openlibrary.org", timeout=timeout)
     r = client.get("/search.json", params={"title": title, "limit": max_results})
@@ -73,12 +88,20 @@ def search_by_title(title: str, *, max_results: int = 5, timeout: float = 10.0) 
     for d in docs:
         nb: NormalizedBook = {
             "source": "open_library",
-            "isbn": (d.get("isbn") or [""])[0] if isinstance(d.get("isbn"), list) else "",
+            "isbn": (d.get("isbn") or [""])[0]
+            if isinstance(d.get("isbn"), list)
+            else "",
             "title": d.get("title"),
             "subtitle": None,
-            "creators": [{"name": a, "role": None} for a in (d.get("author_name") or [])],
-            "publisher": (d.get("publisher") or [None])[0] if d.get("publisher") else None,
-            "published_date": str(d.get("first_publish_year")) if d.get("first_publish_year") else None,
+            "creators": [
+                {"name": a, "role": None} for a in (d.get("author_name") or [])
+            ],
+            "publisher": (d.get("publisher") or [None])[0]
+            if d.get("publisher")
+            else None,
+            "published_date": str(d.get("first_publish_year"))
+            if d.get("first_publish_year")
+            else None,
             "language": None,
             "subjects": d.get("subject") or [],
             "description": None,
