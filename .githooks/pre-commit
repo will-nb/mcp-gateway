@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Block all commits by default on this internal gateway.
+echo "[hook] commit is disabled on this repo (internal-only)."
+echo "[hook] To proceed temporarily: bypass with GIT_PARAMS=allow or --no-verify (not recommended)."
+exit 1

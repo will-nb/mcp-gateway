@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[hook] push is disabled on this repo (internal-only)."
+echo "[hook] To push intentionally, use --no-verify and ensure you have review approval."
+exit 1
