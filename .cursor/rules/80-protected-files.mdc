@@ -1,0 +1,8 @@
+# Protected files
+
+- Do not rename or delete without explicit review:
+  - `app/api/v1/api.py`
+  - `app/core/config.py`
+  - `app/schemas/*`
+  - `requirements.txt`
+- Keep public function signatures backward compatible unless versioned.

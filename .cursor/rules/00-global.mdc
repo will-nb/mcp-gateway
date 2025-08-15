@@ -1,0 +1,7 @@
+# Global rules (mcp-gateway)
+
+- This repository is internal-only. Do not add any public auth layers by default.
+- Prefer explicit, readable code over clever one-liners.
+- All external calls must be wrapped with timeouts and error handling.
+- Document long-running or potentially flaky operations inline (short docstrings).
+- Keep configuration in `app/core/config.py`; do not hardcode secrets.

@@ -1,0 +1,7 @@
+# FastAPI rules
+
+- Organize endpoints under `app/api/v1/endpoints/*` and register in `app/api/v1/api.py`.
+- Response models must be pydantic classes in `app/schemas/*`.
+- Use dependency injection for services in routers; avoid direct globals.
+- Raise `HTTPException` with clear messages; map internal exceptions in middleware.
+- Include minimal example payloads in docstrings when useful.

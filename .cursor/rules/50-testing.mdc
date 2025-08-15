@@ -1,0 +1,6 @@
+# Testing rules
+
+- Use pytest; tests live under `tests/` mirroring package paths.
+- Unit tests must not depend on network; mock external services.
+- Mark slow/integration tests with `@pytest.mark.slow`.
+- Fast tests (<200ms) should cover core logic of services and schemas.
